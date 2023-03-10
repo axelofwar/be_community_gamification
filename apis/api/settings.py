@@ -78,32 +78,29 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    # 'rest_framework.throttling.SimpleRateThrottle'
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django_redis.cache.RedisCache',
-#         'LOCATION': 'redis://localhost:6379/1',
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#         }
-#     }
-# }
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_THROTTLE_CLASSES': [
-#         'api.throttling.CustomThrottle',
-#     ],
-#     'DEFAULT_THROTTLE_RATES': {
-#         'custom': '100/minute',
-#     }
-# }
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day'
+    }
+}
 
 ROOT_URLCONF = 'api.urls'
 
