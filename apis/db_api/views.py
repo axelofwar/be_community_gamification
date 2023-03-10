@@ -88,12 +88,14 @@ class UpdateRule(APIView):
             if 'b' in str(request.body):
                 string = str(request.body)
                 data = string.replace("b'", "")
-            data = json.dumps(data)
+                print("data: ", data)
+            # data = json.dumps(data, ensure_ascii=False)
+            # data = yaml.dump(data, allow_unicode=True)
         try:
             # Read the YAML file and update the ADD_RULE keypair
             with open('../utils/yamls/config.yml', 'r') as yaml_file:
                 config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
-                config_data['ADD_RULE'] = data
+                config_data['ADD_RULE'] = f"'{data}"
 
             # Save the updated YAML file
             with open('../utils/yamls/config.yml', 'w') as yaml_file:

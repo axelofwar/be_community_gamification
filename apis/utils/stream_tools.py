@@ -74,7 +74,7 @@ def delete_all_rules(rules):
 
 
 # SET CURRENT STREAM RULES
-def set_rules(delete, update_flag):
+def set_rules(delete, update_flag, rule):
     # add more error handling for real-time rule adjustment gaps
     with open("../utils/yamls/rules.yml", "r") as file:
         axel_rules = yaml.load(file, Loader=yaml.FullLoader)
@@ -83,7 +83,7 @@ def set_rules(delete, update_flag):
     print("UPDATE VALUE IN SET: ", update_flag)
     if update_flag:
         axel_rules = axel_rules + \
-            [{"value": config["ADD_RULE"], "tag": config["ADD_TAG"]}, ]
+            [{"value": rule, "tag": config["ADD_TAG"]}, ]
         with open("../utils/yamls/rules.yml", "w") as file:
             file.write(str(axel_rules))
 
@@ -134,8 +134,12 @@ def update_rules():
     else:
         print("SETTING NEW RULES")
         delete = delete_all_rules(get_rules())
+        if "'" or '"' in rule:
+            rule = rule.replace("'", "")
+            rule = rule.replace('"', "")
+        print("RULE TO ADD: ", rule)
 
-        set_rules(delete, update_flag)
+        set_rules(delete, update_flag, rule)
         print("RULES UPDATED")
         update_flag = False
     with open("../utils/yamls/config.yml", "w") as file:
@@ -151,6 +155,10 @@ def remove_rules(rules):
         return None
     new_rules = []
     for rule in rules:
+        if "'" or '"' in rule:
+            rule["value"] = rule["value"].replace("'", "")
+            rule["value"] = rule["value"].replace('"', "")
+
         if rule["value"] != remove_it:
             new_rules.append(rule)
     print("NEW RULES: ", new_rules)
@@ -162,6 +170,6 @@ def remove_rules(rules):
         print("REMOVE RULE RESET TO EMPTY")
 
     delete_all_rules(get_rules())
-    set_rules(new_rules, update_flag)
+    set_rules(new_rules, update_flag, rule)
     remove_flag = True
     return remove_flag
