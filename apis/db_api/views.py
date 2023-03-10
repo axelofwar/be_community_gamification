@@ -95,7 +95,7 @@ class UpdateRule(APIView):
             # Read the YAML file and update the ADD_RULE keypair
             with open('../utils/yamls/config.yml', 'r') as yaml_file:
                 config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
-                config_data['ADD_RULE'] = f"'{data}"
+                config_data['ADD_RULE'] = data
 
             # Save the updated YAML file
             with open('../utils/yamls/config.yml', 'w') as yaml_file:
