@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'db_api',
     'corsheaders',
+    'django_redis',
 ]
 
 MIDDLEWARE = [
@@ -78,11 +79,31 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    # 'rest_framework.throttling.SimpleRateThrottle'
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
+
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': 'redis://localhost:6379/1',
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         }
+#     }
+# }
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_THROTTLE_CLASSES': [
+#         'api.throttling.CustomThrottle',
+#     ],
+#     'DEFAULT_THROTTLE_RATES': {
+#         'custom': '100/minute',
+#     }
+# }
 
 ROOT_URLCONF = 'api.urls'
 

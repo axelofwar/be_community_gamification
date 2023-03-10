@@ -156,7 +156,7 @@ def get_wearing_list(members_df):
 
     for member in members_df["Name"].values:
         # print("Member Name :", member, "\n")
-        print("Member Wearing PFP :", members_df["Wearing PFP"].values[iter],
+        print("Member Wearing PFP :", bool(members_df["Wearing PFP"].values[iter]),
               "\n")
         if members_df["Wearing PFP"].values[iter] > 0:
             print(
@@ -171,7 +171,7 @@ def get_wearing_list(members_df):
         else:
             print(f"{member} pfp check failed - skip", "\n")
         iter += 1
-    print("Wearing List: ", wearing_list)
+    # print("Wearing List: ", wearing_list)
     return wearing_list, rank_list, global_reach_list
 
 

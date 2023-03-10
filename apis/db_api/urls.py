@@ -1,11 +1,11 @@
 from django.urls import path
-from db_api.views import TweetList, TweetDetail
+from db_api.views import pfpTable, adminPfpTable, Index, Favicon
 
 app_name = 'db_api'
 
 '''
 This is the URL configuration for the db_api app - contains functions for:
-    - TweetList = pfp_table
+    - PFPTable = pfp_table
     - TweetDetail = pfp_table detail 
 
 TODO:
@@ -14,6 +14,7 @@ TODO:
     - Change api names from Tweet to PFP_Table and propagate changes
 '''
 urlpatterns = [
-    path('Tweet/', TweetList.as_view(), name='Tweet_list'),
-    path('Tweet/<int:pk>/', TweetDetail.as_view(), name='Tweet_detail'),
-]
+    path('Tweet/', pfpTable.as_view(), name='PFP_Table'),
+    path('admin/', adminPfpTable.as_view(), name='PFP_Table_detail'),
+    path('', Index.as_view, name='index'),
+    path('favicon.ico/', Favicon.as_view, name='favicon'), ]

@@ -127,7 +127,8 @@ def get_stream(update_flag, remove_flag):
             full_text = json_response["data"]["text"]
             print("\nMATCHING RULES: ", matching_rules)
             '''
-            We can use this matching rules object in the future to determine which project's table we should add the data to
+            We can use this matching rules object in the future to 
+            determine which project's table we should add the data to
             '''
             print("\nTEXT: ", full_text)
 
@@ -446,7 +447,8 @@ def get_stream(update_flag, remove_flag):
                                 engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions
                             )
                             print(
-                                f"User {user} iterated through and updated if required")
+                                f"User {user} iterated through and updated if required\
+                                    \nWaiting for next loop...")
 
                     else:
                         new_pfp_user = pd.DataFrame(index=[username],
@@ -458,7 +460,8 @@ def get_stream(update_flag, remove_flag):
                             pfpTable, engine, if_exists="append", index=False)
 
                         print(
-                            f"User {user} appended to PFP table (fs comment)")
+                            f"User {user} appended to PFP table (fs comment)\
+                                \nWaiting for next loop...")
                 if wearing_list != []:
                     print("PFP DF UPDATED: ", pfp_df)
 
