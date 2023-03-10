@@ -1,5 +1,5 @@
 from django.urls import path
-from db_api.views import pfpTable, adminPfpTable, Index, Favicon
+from db_api.views import pfpTable, adminPfpTable, Index, UpdateRule
 
 app_name = 'db_api'
 
@@ -14,7 +14,8 @@ TODO:
     - Change api names from Tweet to PFP_Table and propagate changes
 '''
 urlpatterns = [
-    path('Tweet/', pfpTable.as_view(), name='PFP_Table'),
+    path('leaderboard/', pfpTable.as_view(), name='PFP_Table'),
     path('admin/', adminPfpTable.as_view(), name='PFP_Table_detail'),
     path('', Index.as_view, name='index'),
-    path('favicon.ico/', Favicon.as_view, name='favicon'), ]
+    path('add-rule/', UpdateRule.as_view(), name='add-rule'),
+]
