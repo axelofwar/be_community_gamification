@@ -8,8 +8,8 @@ from .serializers import *
 from .models import *
 from rest_framework.views import APIView, Response, status
 from django.shortcuts import render, get_object_or_404
-from utils import update_rules as ur
-from utils import remove_rules as rr
+from api_utils import update_rules as ur
+from api_utils import remove_rules as rr
 
 
 # Get the parent directory of the current file
@@ -88,7 +88,9 @@ class UpdateRule(APIView):
             if 'b' in str(request.body):
                 string = str(request.body)
                 data = string.replace("b'", "")
-            data = json.dumps(data)
+                print("data: ", data)
+            # data = json.dumps(data, ensure_ascii=False)
+            # data = yaml.dump(data, allow_unicode=True)
         try:
             # Read the YAML file and update the ADD_RULE keypair
             with open('../utils/yamls/config.yml', 'r') as yaml_file:

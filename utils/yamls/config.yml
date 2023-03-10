@@ -1,4 +1,4 @@
-ADD_RULE: '"test''"'
+ADD_RULE: ''
 ADD_TAG: config-rule
 RECONNECT_COUNT: 1
 REMOVE_RULE: ''
