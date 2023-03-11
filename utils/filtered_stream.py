@@ -235,8 +235,8 @@ def get_stream(update_flag, remove_flag):
 
                             df = st.create_dataFrame(included_id, included_author_username, author_name, included_likes,
                                                      included_retweets, included_replies, included_impressions)
-                        except:
-                            print("ERROR ON GET USERNAME BY AUTHOR ID")
+                        except Exception as err:
+                            print("ERROR ON GET USERNAME BY AUTHOR ID ", err)
 
                     print("\nAUTHOR OF INCLUDED/PARENT TWEET DIFFERENT FROM AUTHOR")
                     print("\nIncluded/Parent Likes: ", included_likes)
@@ -315,7 +315,6 @@ def get_stream(update_flag, remove_flag):
                         export_include_df.to_sql(
                             tweetsTable, engine, if_exists="append")
                         print("New user in Metrics Table appended")
-                    # except:
 
                 # read the table post changes
                 tweets_df = pd.read_sql_table(tweetsTable, engine)
@@ -448,7 +447,7 @@ def get_stream(update_flag, remove_flag):
                             )
                             print(
                                 f"User {user} iterated through and updated if required\
-                                    \nWaiting for next loop...")
+                                    \nWaiting for next...")
 
                     else:
                         new_pfp_user = pd.DataFrame(index=[username],
