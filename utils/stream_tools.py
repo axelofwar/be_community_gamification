@@ -138,6 +138,7 @@ def update_rules():
 
     if "ADD_RULE" in config:
         rule = config["ADD_RULE"]
+        tag = config["ADD_TAG"]
         update_flag = True
         print("UPDATED TO TRUE: ", update_flag)
     else:
@@ -154,6 +155,7 @@ def update_rules():
         update_flag = False
     with open("utils/yamls/config.yml", "w") as file:
         config["ADD_RULE"] = ""
+        # config["ADD_TAG"] = ""
         yaml.dump(config, file)
         print("RULE RESET TO EMPTY")
 
@@ -211,104 +213,95 @@ def get_tweet_metrics(tweet_id):
     return response.json()
 
 
+'''
+TODO: Confirm that the update_aggregated_metrics function is 
+working as intended. It should only update rows that have changed
+and not the entire table. We still need to confirm if the += logic
+being using to aggregate the values is correct. It should be
+
+'''
+
+
 def update_aggregated_metrics(engine, author_username, users_df, tweets_df):
-    aggregated_likes, aggregated_retweets, aggregated_replies, aggregated_impressions = 0, 0, 0, 0
+    # Get the row in `users_df` where the index matches the author_username
+    user_row = users_df[users_df["index"] == author_username]
+    current_likes = user_row["Favorites"].values[0]
+    current_retweets = user_row["Retweets"].values[0]
+    current_replies = user_row["Replies"].values[0]
+    current_impressions = user_row["Impressions"].values[0]
 
-# Filter the rows where the index matches the author_username
-    user_rows = tweets_df[tweets_df["index"] == author_username]
+    # Iterate through the rows in `tweets_df` where the index matches the author_username,
+    # and update the aggregated values with the changed values
+    for _, row in tweets_df[tweets_df["index"] == author_username].iterrows():
+        current_likes += row["Favorites"]
+        current_retweets += row["Retweets"]
+        current_replies += row["Replies"]
+        current_impressions += row["Impressions"]
 
-    for _, row in user_rows.iterrows():
-        # Sum up the columns and add the result to the respective aggregated variable
-        aggregated_likes += row["Favorites"]
-        aggregated_retweets += row["Retweets"]
-        aggregated_replies += row["Replies"]
-        aggregated_impressions += row["Impressions"]
+    # Check if `aggregated_impressions` is still 0, and if so, update it with the value from `users_df`
+    if current_impressions == 0:
+        current_impressions = user_row["Impressions"].values[0]
 
-    # If `aggregated_impressions` is still 0, add the value from `users_df`
-    if aggregated_impressions == 0:
-        aggregated_impressions = users_df.loc[users_df["index"]
-                                              == author_username]["Impressions"].values[0]
+    # Only update the aggregated values in `users_df` if they have changed
+    if (current_likes != user_row["Favorites"].values[0] or
+        current_retweets != user_row["Retweets"].values[0] or
+        current_replies != user_row["Replies"].values[0] or
+            current_impressions != user_row["Impressions"].values[0]):
 
-    # Update the aggregated values in `users_df`
-    users_df.loc[users_df["index"] == author_username,
-                 "Favorites"] = aggregated_likes
-    users_df.loc[users_df["index"] == author_username,
-                 "Retweets"] = aggregated_retweets
-    users_df.loc[users_df["index"] == author_username,
-                 "Replies"] = aggregated_replies
-    users_df.loc[users_df["index"] == author_username,
-                 "Impressions"] = aggregated_impressions
+        users_df.loc[users_df["index"] == author_username,
+                     "Favorites"] = current_likes
+        users_df.loc[users_df["index"] == author_username,
+                     "Retweets"] = current_retweets
+        users_df.loc[users_df["index"] == author_username,
+                     "Replies"] = current_replies
+        users_df.loc[users_df["index"] == author_username,
+                     "Impressions"] = current_impressions
 
-    # Write the updated `users_df` to the database
-    users_df.to_sql(usersTable, engine, if_exists="replace", index=False)
-    print(f"Aggregated values for {author_username} in Users table updated")
-    print("DF Users Table: ", users_df)
+        # Write the updated `users_df` to the database
+        users_df.to_sql(usersTable, engine,
+                        if_exists="replace", index=False)
+        print(
+            f"Aggregated values for {author_username} in Users table updated")
+        print("Agg DF Users Table: ", users_df)
+    else:
+        print(f"No changes to aggregated values for {author_username}")
 
-    # aggregated_likes, aggregated_retweets, aggregated_replies, aggregated_impressions = 0, 0, 0, 0
 
-    # for user in tweets_df["index"].values:
-    #     if user == author_username:
-    #         print(
-    #             f"{user} to aggregate found in Metrics Table")
+# # Filter the rows where the index matches the author_username
+#     user_rows = tweets_df[tweets_df["index"] == author_username]
 
-    #         user_rows = pg.get_all_user_metric_rows(
-    #             engine, tweetsTable, author_username)
-    #         for item in user_rows:
-    #             print("ROW TO AGGREGATE: ", item[0])
-    #             # potential error here if item is None
-    #             if item != None:
-    #                 aggregated_likes += int(item[2])
-    #                 print("AGGREGATED LIKES: ", aggregated_likes)
-    #                 aggregated_retweets += int(item[3])
-    #                 print("AGGREGATED RETWEETS: ", aggregated_retweets)
-    #                 aggregated_replies += int(item[4])
-    #                 print("AGGREGATED REPLIES: ", aggregated_replies)
-    #                 try:
-    #                     aggregated_impressions += int(item[5])
-    #                     print("AGGREGATED IMPRESSIONS: ",
-    #                           aggregated_impressions)
-    #                 except:
-    #                     print("NO IMPRESSIONS TO AGGREGATE")
-    #                     aggregated_impressions = users_df.loc[users_df["index"]
-    #                                                           == author_username]["Impressions"].values[0]
+#     for _, row in user_rows.iterrows():
+#         # Sum up the columns and add the result to the respective aggregated variable
+#         aggregated_likes += row["Favorites"]
+#         aggregated_retweets += row["Retweets"]
+#         aggregated_replies += row["Replies"]
+#         aggregated_impressions += row["Impressions"]
 
-    #             row = users_df.loc[users_df["index"]
-    #                                == author_username]
-    #             # print("Row Vals: ", row.values)
-    #             if row.empty == False:
-    #                 row = row.values[0]
-    #                 if len(row) > 6:
-    #                     row = row[1:]
-    #                     if "level_0" in users_df.columns:
-    #                         print("DAMNIT")
-    #                         users_df.dropna(inplace=True)
-    #                         users_df.drop(
-    #                             columns=["level_0"], axis=1, inplace=True)
+#     # If `aggregated_impressions` is still 0, add the value from `users_df`
+#     if aggregated_impressions == 0:
+#         aggregated_impressions = users_df.loc[users_df["index"]
+#                                               == author_username]["Impressions"].values[0]
 
-    #             if user in users_df["index"].values:
-    #                 print(
-    #                     "Updating aggregated values in Users Table...")
-    #                 users_df.loc[users_df["index"] == author_username, [
-    #                     "Favorites"]] = aggregated_likes
-    #                 print("Aggregated Likes updated: ", aggregated_likes)
-    #                 users_df.loc[users_df["index"] == author_username, [
-    #                     "Retweets"]] = aggregated_retweets
-    #                 print("Aggregated Retweets updated: ",
-    #                       aggregated_retweets)
-    #                 users_df.loc[users_df["index"] == author_username, [
-    #                     "Replies"]] = aggregated_replies
-    #                 print("Aggregated Replies updated: ",
-    #                       aggregated_replies)
-    #                 users_df.loc[users_df["index"] == author_username, [
-    #                     "Impressions"]] = aggregated_impressions
-    #                 print("Aggregated Impressions updated: ",
-    #                       aggregated_impressions)
+#     # Update the aggregated values in `users_df`
+#     users_df.loc[users_df["index"] == author_username,
+#                  "Favorites"] = aggregated_likes
+#     users_df.loc[users_df["index"] == author_username,
+#                  "Retweets"] = aggregated_retweets
+#     users_df.loc[users_df["index"] == author_username,
+#                  "Replies"] = aggregated_replies
+#     users_df.loc[users_df["index"] == author_username,
+#                  "Impressions"] = aggregated_impressions
 
-    #                 users_df.to_sql(
-    #                     usersTable, engine, if_exists="replace", index=False)
-    #                 print(
-    #                     f"Aggregated values for {author_username} in Users table updated")
-    #                 print("DF Users Table: ", users_df)
+#     # Write the updated `users_df` to the database
+#     users_df.to_sql(usersTable, engine, if_exists="replace", index=False)
+#     print(f"Aggregated values for {author_username} in Users table updated")
+#     print("DF Users Table: ", users_df)
+
+'''
+TODO: Confirm that the update_tweets_table function is working properly
+this method should only update the values in the table if they have increased
+If it isn't then use the one below it that replaces the whole table
+'''
 
 
 def update_tweets_table(engine, id, tweets_df, included_likes, included_retweets, included_replies, included_impressions):
@@ -434,6 +427,12 @@ def update_tweets_table(engine, id, tweets_df, included_likes, included_retweets
 #     # decide how to update only the rows that have changed
 #     # get totals of engagers vs. author and weight them accordingly
 #     print("User in Metrics Table updated")
+'''
+TODO: Confirm that the update_pfp_tracked_table function is working properly
+this method should only update the values in the table if they have increased
+If it isn't then use the one below it that replaces the whole table
+'''
+
 
 def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions):
     pfp_table_name = config["pfp_table_name"]
@@ -568,4 +567,25 @@ def create_dataFrame(id, author_username, author_name, likes, retweets, replies,
         index=authors_index, data=id, columns=["Tweet ID"])
     df = pd.concat([df0, df1, df2, df3, df4, df5], axis=1)
 
+    return df
+
+
+def create_metric_dataFrame(id, author_username, author_name, likes, retweets, replies, impressions, tag):
+    authors_index = [author_username]
+
+    df0 = pd.DataFrame(
+        index=authors_index, data=author_name, columns=["Author"])
+    df1 = pd.DataFrame(
+        index=authors_index, data=int(likes), columns=["Favorites"])
+    df2 = pd.DataFrame(
+        index=authors_index, data=int(retweets), columns=["Retweets"])
+    df3 = pd.DataFrame(
+        index=authors_index, data=int(replies), columns=["Replies"])
+    df4 = pd.DataFrame(
+        index=authors_index, data=int(impressions), columns=["Impressions"])
+    df5 = pd.DataFrame(
+        index=authors_index, data=id, columns=["Tweet ID"])
+    df6 = pd.DataFrame(
+        index=authors_index, data=tag, columns=["Tag"])
+    df = pd.concat([df0, df1, df2, df3, df4, df5, df6], axis=1)
     return df

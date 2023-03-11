@@ -125,12 +125,12 @@ def get_collection_members(engine, collection, usersTable):
         )
 
         if member_name in names:
-            print(
-                f"Member {member_name} in users_df database - check if wearing PFP")
+            # print(
+            # f"Member {member_name} in users_df database - check if wearing PFP")
             members_data_frame = pd.concat(
                 [members_data_frame, member_data_frame])
 
-    print(f"{collection} data frame: ", members_data_frame)
+    print(f"{collection} data frame: \n", members_data_frame, "\n")
 
     return members_data_frame
 
@@ -156,21 +156,23 @@ def get_wearing_list(members_df):
 
     for member in members_df["Name"].values:
         # print("Member Name :", member, "\n")
-        print("Member Wearing PFP :", bool(members_df["Wearing PFP"].values[iter]),
-              "\n")
+        # print("Member Wearing PFP :", bool(members_df["Wearing PFP"].values[iter]),
+        #   "\n")
         if members_df["Wearing PFP"].values[iter] > 0:
-            print(
-                f"{member} pfp check successful - add/update to pfp_table", "\n")
+            # print(
+            #     f"{member} pfp check successful - add/update to pfp_table", "\n")
             wearing_list.append(member)
             rank_list.append(members_df["Rank"].values[iter])
-            print("Rank :", members_df["Rank"].values[iter], "\n")
+            # print("Rank :", members_df["Rank"].values[iter], "\n")
             global_reach_list.append(
                 members_df["Global Reach"].values[iter]*100)
-            print("Global Reach % :", members_df["Global Reach"].values[iter]*100,
-                  "\n")
+            # print("Global Reach % :", members_df["Global Reach"].values[iter]*100,
+            #       "\n")
         else:
-            print(f"{member} pfp check failed - skip", "\n")
+            pass
+            # print(f"{member} pfp check failed - skip", "\n")
         iter += 1
+    print(f"Members wearing PFP: {wearing_list}", "\n")
     # print("Wearing List: ", wearing_list)
     return wearing_list, rank_list, global_reach_list
 

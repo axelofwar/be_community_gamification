@@ -124,6 +124,7 @@ def get_stream(update_flag, remove_flag):
 
             id = json_response["data"]["id"]
             matching_rules = json_response["matching_rules"]
+            tag = matching_rules[0]["tag"]
             full_text = json_response["data"]["text"]
             print("\nMATCHING RULES: ", matching_rules)
             '''
@@ -200,7 +201,7 @@ def get_stream(update_flag, remove_flag):
                                data=id, columns=["Tweet ID"])
             df = pd.concat([df0, df1, df2, df3], axis=1)
 
-            export_df = df
+            # export_df = df
             # print("\nExport_df:", export_df)
 
             if tweet_data["includes"] and "tweets" in tweet_data["includes"]:
@@ -233,10 +234,10 @@ def get_stream(update_flag, remove_flag):
                             included_author_username = included_name["data"]["username"]
                             included_author_name = included_name["data"]["name"]
 
-                            df = st.create_dataFrame(included_id, included_author_username, author_name, included_likes,
-                                                     included_retweets, included_replies, included_impressions)
-                        except:
-                            print("ERROR ON GET USERNAME BY AUTHOR ID")
+                            df = st.create_metric_dataFrame(included_id, included_author_username, author_name, included_likes,
+                                                            included_retweets, included_replies, included_impressions, tag)
+                        except Exception as err:
+                            print("ERROR ON GET USERNAME BY AUTHOR ID ", err)
 
                     print("\nAUTHOR OF INCLUDED/PARENT TWEET DIFFERENT FROM AUTHOR")
                     print("\nIncluded/Parent Likes: ", included_likes)
@@ -266,9 +267,9 @@ def get_stream(update_flag, remove_flag):
 
                         engager_author_username = author_username
 
-                        df = st.create_dataFrame(included_id, engager_author_username,
-                                                 engager_user["name"], included_likes, included_retweets,
-                                                 included_replies, included_impressions)
+                        df = st.create_metric_dataFrame(included_id, engager_author_username,
+                                                        engager_user["name"], included_likes, included_retweets,
+                                                        included_replies, included_impressions, tag)
 
                     if engager_id == included_author_id:
                         print("\nTweet's Mentioned UserID: ", engager_id,
@@ -281,8 +282,8 @@ def get_stream(update_flag, remove_flag):
                         #     "\nMatching Included/Parent Author Username: ", engager_username)
                         engager_author_username = included_author_username
 
-                        df = st.create_dataFrame(included_id, engager_author_username, included_author_name, included_likes,
-                                                 included_retweets, included_replies, included_impressions)
+                        df = st.create_metric_dataFrame(included_id, engager_author_username, included_author_name, included_likes,
+                                                        included_retweets, included_replies, included_impressions, tag)
 
                 export_include_df = df
                 # print("\nExport Include DF: ", export_include_df)
@@ -315,7 +316,6 @@ def get_stream(update_flag, remove_flag):
                         export_include_df.to_sql(
                             tweetsTable, engine, if_exists="append")
                         print("New user in Metrics Table appended")
-                    # except:
 
                 # read the table post changes
                 tweets_df = pd.read_sql_table(tweetsTable, engine)
@@ -448,7 +448,7 @@ def get_stream(update_flag, remove_flag):
                             )
                             print(
                                 f"User {user} iterated through and updated if required\
-                                    \nWaiting for next loop...")
+                                    \nWaiting for next...")
 
                     else:
                         new_pfp_user = pd.DataFrame(index=[username],

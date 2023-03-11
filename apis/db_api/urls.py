@@ -1,5 +1,5 @@
 from django.urls import path
-from db_api.views import pfpTable, adminPfpTable, Index, UpdateRule
+from db_api.views import pfpTable, adminPfpTable, Index, UpdateRule, RemoveRule
 
 app_name = 'db_api'
 
@@ -18,4 +18,5 @@ urlpatterns = [
     path('admin/', adminPfpTable.as_view(), name='PFP_Table_detail'),
     path('', Index.as_view, name='index'),
     path('add-rule/', UpdateRule.as_view(), name='add-rule'),
+    path('remove-rule/', RemoveRule.as_view(), name='remove-rule'),
 ]

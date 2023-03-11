@@ -33,7 +33,6 @@ jobs:
         run: |
           echo "ENTERING SERVER RUNNER"
           cd apis
-          trap "exit 0" ERR
           timeout 10 python3 manage.py runserver --noreload > /dev/null 2>&1 && python3 test.py
           cd ..
           echo "WAKE UP"
