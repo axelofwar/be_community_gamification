@@ -464,7 +464,7 @@ def get_stream(update_flag, remove_flag):
                                                     data=[
                                                         [username, user, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach]],
                                                     columns=["index", "Name", "Favorites",
-                                                             "Retweets", "Replies", "Impressions", "Rank", "Global Reach"])
+                                                             "Retweets", "Replies", "Impressions", "Rank", "Global_Reach"])
                         new_pfp_user.to_sql(
                             pfpTable, engine, if_exists="append", index=False)
 

@@ -16,7 +16,7 @@ TODO:
 urlpatterns = [
     path('leaderboard/', pfpTable.as_view(), name='PFP_Table'),
     path('admin/', adminPfpTable.as_view(), name='PFP_Table_detail'),
-    path('/', Index.as_view, name='index'),
+    path('', Index.as_view, name='index'),
     path('add-rule/', UpdateRule.as_view(), name='add-rule'),
     path('remove-rule/', RemoveRule.as_view(), name='remove-rule'),
 ]

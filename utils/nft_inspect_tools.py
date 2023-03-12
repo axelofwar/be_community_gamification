@@ -91,7 +91,7 @@ def get_collection_members(engine, collection, usersTable):
             "Name": [],
             "Wearing PFP": [],
             "PFP URL": [],
-            "Global Reach": [],
+            "Global_Reach": [],
             "Rank": [],
             "Time With Token": [],
             "Time With Collection": [],
@@ -117,7 +117,7 @@ def get_collection_members(engine, collection, usersTable):
                 "Name": [member_name],
                 "Wearing PFP": [member_wearing_pfp],
                 "PFP URL": [member_pfp_url],
-                "Global Reach": [member_global_reach],
+                "Global_Reach": [member_global_reach],
                 "Rank": [member_rank],
                 "Time With Token": [member_time_with_token],
                 "Time With Collection": [member_time_with_collection],
@@ -164,7 +164,7 @@ def get_wearing_list(members_df):
             wearing_list.append(member)
             rank_list.append(members_df["Rank"].values[iter])
             global_reach_list.append(
-                members_df["Global Reach"].values[iter]*100)
+                members_df["Global_Reach"].values[iter]*100)
         else:
             pass
             # print(f"{member} pfp check failed - skip", "\n")

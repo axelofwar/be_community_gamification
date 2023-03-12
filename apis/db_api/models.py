@@ -22,6 +22,8 @@ class Tweet(models.Model):
     Retweets = models.IntegerField()
     Replies = models.IntegerField()
     Impressions = models.IntegerField()
+    Rank = models.IntegerField()
+    Global_Reach = models.FloatField()
 
     class Meta:
         # managed = False
@@ -30,4 +32,4 @@ class Tweet(models.Model):
 
     def __str__(self):
         print(f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions")
-        return f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions"
+        return f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, impressions {self.Impressions}, rank {self.Rank}, and global reach {self.Global_Reach}"

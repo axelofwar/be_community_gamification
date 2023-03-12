@@ -3,9 +3,12 @@ from .models import Tweet
 
 
 class PFP_TableAdmin(admin.ModelAdmin):
-    list_display = ("Name", "Favorites", "Retweets", "Replies", "Impressions")
-    list_filter = ("Name", "Favorites", "Retweets", "Replies", "Impressions")
-    search_fields = ("Name", "Favorites", "Retweets", "Replies", "Impressions")
+    list_display = ("Name", "Favorites", "Retweets", "Replies",
+                    "Impressions", "Rank", "Global_Reach")
+    list_filter = ("Name", "Favorites", "Retweets", "Replies",
+                   "Impressions", "Rank", "Global_Reach")
+    search_fields = ("Name", "Favorites", "Retweets", "Replies",
+                     "Impressions", "Rank", "Global_Reach")
 
 
 admin.site.register(Tweet, PFP_TableAdmin)

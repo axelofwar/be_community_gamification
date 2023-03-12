@@ -111,7 +111,7 @@ def check_metrics_table(engine, table_name):
               Column('Retweets', Integer),
               Column('Replies', Integer),
               Column('Impressions', Integer),
-              Column('Tweet ID', Text),
+              Column('Tweet_ID', Text),
               )
         metadata.create_all()
         print(f"{table_name} Table created")
@@ -152,7 +152,7 @@ def check_pfp_table(engine, table_name):
               Column("Replies", Integer),
               Column("Impressions", Integer),
               Column("Rank", Integer),
-              Column("Global Reach", Integer),
+              Column("Global_Reach", Integer),
               )
         metadata.create_all()
         print(f"{table_name} table created")

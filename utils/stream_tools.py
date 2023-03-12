@@ -448,7 +448,7 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
             "Replies": [agg_replies],
             "Impressions": [agg_impressions],
             "Rank": [rank],
-            "Global Reach": [global_reach]
+            "Global_Reach": [global_reach]
         })
         print("PFP Tracked Table Created: ", pfp_table)
         pfp_table.to_sql(pfp_table_name, engine,
@@ -482,9 +482,9 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
             if user_row["Rank"] is None or rank > user_row["Rank"]:
                 updates["Rank"] = rank if user_row["Rank"] is None else max(
                     rank, user_row["Rank"])
-            if user_row["Global Reach"] is None or global_reach > user_row["Global Reach"]:
-                updates["Global Reach"] = global_reach if user_row["Global Reach"] is None else max(
-                    global_reach, user_row["Global Reach"])
+            if user_row["Global_Reach"] is None or global_reach > user_row["Global_Reach"]:
+                updates["Global_Reach"] = global_reach if user_row["Global_Reach"] is None else max(
+                    global_reach, user_row["Global_Reach"])
 
             if updates:
                 pfp_table.loc[user_index, updates.keys()] = updates.values()
@@ -498,7 +498,7 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
                 "Replies": [agg_replies],
                 "Impressions": [agg_impressions],
                 "Rank": [rank],
-                "Global Reach": [global_reach]
+                "Global_Reach": [global_reach]
             })
             pfp_table = pfp_table.append(new_row, ignore_index=True)
             pfp_table.to_sql(pfp_table_name, engine,
