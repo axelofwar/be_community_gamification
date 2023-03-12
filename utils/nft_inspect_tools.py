@@ -130,7 +130,7 @@ def get_collection_members(engine, collection, usersTable):
             members_data_frame = pd.concat(
                 [members_data_frame, member_data_frame])
 
-    print(f"{collection} data frame: \n", members_data_frame, "\n")
+    # print(f"{collection} data frame: \n", members_data_frame, "\n")
 
     return members_data_frame
 
@@ -152,7 +152,7 @@ def get_wearing_list(members_df):
     rank_list, global_reach_list = [], []
     iter = 0
 
-    print("MEMBERS DF: ", members_df, "/n")
+    print("MEMBERS DF: ", members_df, "\n")
 
     for member in members_df["Name"].values:
         # print("Member Name :", member, "\n")
@@ -163,16 +163,13 @@ def get_wearing_list(members_df):
             #     f"{member} pfp check successful - add/update to pfp_table", "\n")
             wearing_list.append(member)
             rank_list.append(members_df["Rank"].values[iter])
-            # print("Rank :", members_df["Rank"].values[iter], "\n")
             global_reach_list.append(
                 members_df["Global Reach"].values[iter]*100)
-            # print("Global Reach % :", members_df["Global Reach"].values[iter]*100,
-            #       "\n")
         else:
             pass
             # print(f"{member} pfp check failed - skip", "\n")
         iter += 1
-    print(f"Members wearing PFP: {wearing_list}", "\n")
+    # print(f"Members wearing PFP: {wearing_list}", "\n")
     # print("Wearing List: ", wearing_list)
     return wearing_list, rank_list, global_reach_list
 

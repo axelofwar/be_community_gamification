@@ -114,7 +114,7 @@ def check_metrics_table(engine, table_name):
               Column('Tweet ID', Text),
               )
         metadata.create_all()
-        print("Metrics Table created")
+        print(f"{table_name} Table created")
     else:
         print(f"{table_name} Table already exists")
 
@@ -133,11 +133,12 @@ def check_users_table(engine, table_name):
               Column("Impressions", Integer),
               )
         metadata.create_all()
-        print("Table created")
+        print(f"{table_name} table created")
     else:
         print(f"{table_name} Table already exists")
 
 
+# added rank and reach to pfp table
 def check_pfp_table(engine, table_name):
     metadata = MetaData(bind=engine)
 
@@ -150,9 +151,11 @@ def check_pfp_table(engine, table_name):
               Column("Retweets", Integer),
               Column("Replies", Integer),
               Column("Impressions", Integer),
+              Column("Rank", Integer),
+              Column("Global Reach", Integer),
               )
         metadata.create_all()
-        print("Table created")
+        print(f"{table_name} table created")
     else:
         print(f"{table_name} Table already exists")
 

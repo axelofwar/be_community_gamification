@@ -390,6 +390,10 @@ def get_stream(update_flag, remove_flag):
                     pfp_df = pd.read_sql_table(pfpTable, engine)
                     users_df = pd.read_sql_table(usersTable, engine)
 
+                    rank = rank_list[wearing_list.index(user)]
+                    global_reach = global_reach_list[wearing_list.index(
+                        user)]
+
                     # row = pfp_df.loc[pfp_df["Name"] == user]
                     # print("ROW: ", row)
                     try:
@@ -406,6 +410,7 @@ def get_stream(update_flag, remove_flag):
                         retweets = 0
                         replies = 0
                         impressions = 0
+                        print("stuck in except of user in wearing_list loop")
 
                     if user in users_df["Name"].values:
                         # print("USER NAME ENDPOINT RESPONSE: ", response.json())
@@ -426,6 +431,7 @@ def get_stream(update_flag, remove_flag):
                         except:
                             username = users_df.loc[users_df["Name"]
                                                     == user, "index"].values[0]
+                            print("stuck in except of user in users_df loop")
                             # this could be the engager so we need to handle this better in the case the api doesnt return data
                             # OR we need to preserve the included_author_username in the users table
                             # instead of the engager as the index and propogate that change throughout the code
@@ -439,22 +445,26 @@ def get_stream(update_flag, remove_flag):
                                                    == user, "Replies"].values[0]
                         agg_impressions = users_df.loc[users_df["Name"]
                                                        == user, "Impressions"].values[0]
-
+                        # if likes have changed - or if the user's rank hasn't been stored yet
+                        # TODO: add rank and global reach to this if statement
                         if likes < agg_likes or retweets < agg_retweets or replies < agg_replies or impressions < agg_impressions:
                             print("Updating PFP table...")
-                            pfp_updated_table = st.update_pfp_tracked_table(
-                                engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions
-                            )
+                            st.update_pfp_tracked_table(
+                                engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach)
                             print(
                                 f"User {user} iterated through and updated if required\
+                                    \nWaiting for next...")
+                        else:
+                            print(
+                                f"User {user} already tracked and no updates required\
                                     \nWaiting for next...")
 
                     else:
                         new_pfp_user = pd.DataFrame(index=[username],
                                                     data=[
-                                                        [username, user, agg_likes, agg_retweets, agg_replies, agg_impressions]],
+                                                        [username, user, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach]],
                                                     columns=["index", "Name", "Favorites",
-                                                             "Retweets", "Replies", "Impressions"])
+                                                             "Retweets", "Replies", "Impressions", "Rank", "Global Reach"])
                         new_pfp_user.to_sql(
                             pfpTable, engine, if_exists="append", index=False)
 
