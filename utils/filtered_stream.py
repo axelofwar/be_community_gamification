@@ -319,7 +319,7 @@ def get_stream(update_flag, remove_flag):
 
                 # read the table post changes
                 tweets_df = pd.read_sql_table(tweetsTable, engine)
-                print("DF Metrics Table: ", tweets_df)
+                # print("DF Metrics Table: ", tweets_df)
 
                 users_df = pd.read_sql_table(usersTable, engine)
 
@@ -352,7 +352,7 @@ def get_stream(update_flag, remove_flag):
                         usersTable, engine, if_exists="append", index=False)
                     print(
                         f"New user {included_author_name} in Users table appended (fs comment)")
-                    print("DF Users Table: ", users_df)
+                    # print("DF Users Table: ", users_df)
                     if users_df.empty == True:
                         print("Users table is empty, appending...")
                         export_users_df.to_sql(
@@ -390,6 +390,8 @@ def get_stream(update_flag, remove_flag):
                     # ensure we update existing tables that will be used each loop
                     pfp_df = pd.read_sql_table(pfpTable, engine)
                     users_df = pd.read_sql_table(usersTable, engine)
+                    rank = rank_list[wearing_list.index(user)]
+                    global_reach = global_reach_list[wearing_list.index(user)]
 
                     # row = pfp_df.loc[pfp_df["Name"] == user]
                     # print("ROW: ", row)
@@ -431,7 +433,6 @@ def get_stream(update_flag, remove_flag):
                             # OR we need to preserve the included_author_username in the users table
                             # instead of the engager as the index and propogate that change throughout the code
                             # this should help reduce api endpoint call stress as well
-
                         agg_likes = users_df.loc[users_df["Name"]
                                                  == user, "Favorites"].values[0]
                         agg_retweets = users_df.loc[users_df["Name"]
@@ -440,11 +441,15 @@ def get_stream(update_flag, remove_flag):
                                                    == user, "Replies"].values[0]
                         agg_impressions = users_df.loc[users_df["Name"]
                                                        == user, "Impressions"].values[0]
+                        # rank = users_df.loc[users_df["Name"]
+                        #                                == user, "Rank"].values[0]
+                        # global_reach = users_df.loc[users_df["Name"]
+                        #                                == user, "Global_Reach"].values[0]
 
                         if likes < agg_likes or retweets < agg_retweets or replies < agg_replies or impressions < agg_impressions:
                             print("Updating PFP table...")
                             pfp_updated_table = st.update_pfp_tracked_table(
-                                engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions
+                                engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach
                             )
                             print(
                                 f"User {user} iterated through and updated if required\
@@ -453,9 +458,9 @@ def get_stream(update_flag, remove_flag):
                     else:
                         new_pfp_user = pd.DataFrame(index=[username],
                                                     data=[
-                                                        [username, user, agg_likes, agg_retweets, agg_replies, agg_impressions]],
+                                                        [username, user, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach]],
                                                     columns=["index", "Name", "Favorites",
-                                                             "Retweets", "Replies", "Impressions"])
+                                                             "Retweets", "Replies", "Impressions", "Rank", "Global_Reach"])
                         new_pfp_user.to_sql(
                             pfpTable, engine, if_exists="append", index=False)
 
