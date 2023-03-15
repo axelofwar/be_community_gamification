@@ -90,15 +90,23 @@ class UpdateRule(APIView):
                 f"Error: {err} with request: {request} of data: {request.body}")
             if 'b' in str(request.body):
                 string = str(request.body)
-                data = string.replace("b'", "")
-                print("\ndata: ", data)
-                rule, tag = data.split(',')
-                # rule = rule.replace("'", "")
-                print("\nrule: ", rule)
-                tag = tag.replace("'", "")
-                tag = tag.replace(" ", "")
-                print("\ntag: ", tag)
-
+                try:
+                    data = string.replace("b'", "")
+                    print("\ndata: ", data)
+                    rule, tag = data.split(',')
+                    # rule = rule.replace("'", "")
+                    print("\nrule: ", rule)
+                    tag = tag.replace("'", "")
+                    tag = tag.replace(" ", "")
+                    print("\ntag: ", tag)
+                except Exception as err:
+                    print(
+                        f"Error: {err} with request: {request} of data: {request.body}")
+                    with open('../utils/yamls/config.yml', 'w') as yaml_file:
+                        config_data = yaml.load(
+                            yaml_file, Loader=yaml.FullLoader)
+                        config_data['ADD_RULE'] = ""
+                        config_data['ADD_TAG'] = ""
             # data = json.dumps(data, ensure_ascii=False)
             # data = yaml.dump(data, allow_unicode=True)
         try:

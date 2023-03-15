@@ -91,7 +91,7 @@ def get_collection_members(engine, collection, usersTable):
             "Name": [],
             "Wearing PFP": [],
             "PFP URL": [],
-            "Global Reach": [],
+            "Global_Reach": [],
             "Rank": [],
             "Time With Token": [],
             "Time With Collection": [],
@@ -117,7 +117,7 @@ def get_collection_members(engine, collection, usersTable):
                 "Name": [member_name],
                 "Wearing PFP": [member_wearing_pfp],
                 "PFP URL": [member_pfp_url],
-                "Global Reach": [member_global_reach],
+                "Global_Reach": [member_global_reach],
                 "Rank": [member_rank],
                 "Time With Token": [member_time_with_token],
                 "Time With Collection": [member_time_with_collection],
@@ -130,7 +130,7 @@ def get_collection_members(engine, collection, usersTable):
             members_data_frame = pd.concat(
                 [members_data_frame, member_data_frame])
 
-    print(f"{collection} data frame: \n", members_data_frame, "\n")
+    # print(f"{collection} data frame: \n", members_data_frame, "\n")
 
     return members_data_frame
 
@@ -165,14 +165,14 @@ def get_wearing_list(members_df):
             rank_list.append(members_df["Rank"].values[iter])
             # print("Rank :", members_df["Rank"].values[iter], "\n")
             global_reach_list.append(
-                members_df["Global Reach"].values[iter]*100)
+                members_df["Global_Reach"].values[iter]*100)
             # print("Global Reach % :", members_df["Global Reach"].values[iter]*100,
             #       "\n")
         else:
             pass
             # print(f"{member} pfp check failed - skip", "\n")
         iter += 1
-    print(f"Members wearing PFP: {wearing_list}", "\n")
+    # print(f"Members wearing PFP: {wearing_list}", "\n")
     # print("Wearing List: ", wearing_list)
     return wearing_list, rank_list, global_reach_list
 

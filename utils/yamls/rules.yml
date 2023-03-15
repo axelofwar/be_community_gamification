@@ -1,1 +1,5 @@
-[{'value': '@axelofwar', 'tag': 'accounts'}, {'value': '@y00tsNFT', 'tag': 'y00ts'}, {'value': 'DeGodsNFT', 'tag': 'degods'}, {'value': 'myRule', 'tag': 'myTag'}]
+[
+  { "value": "@axelofwar", "tag": "accounts" },
+  { "value": "@y00tsNFT", "tag": "y00ts" },
+  { "value": "DeGodsNFT", "tag": "degods" },
+]
