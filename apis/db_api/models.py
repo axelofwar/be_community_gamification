@@ -22,6 +22,8 @@ class Tweet(models.Model):
     Retweets = models.IntegerField()
     Replies = models.IntegerField()
     Impressions = models.IntegerField()
+    Rank = models.IntegerField()
+    Global_Reach = models.IntegerField()
 
     class Meta:
         # managed = False
@@ -29,5 +31,5 @@ class Tweet(models.Model):
         verbose_name_plural = 'pfp_table'
 
     def __str__(self):
-        print(f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions")
-        return f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions"
+        print(f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions, and is ranked {self.Rank} with a global reach of {self.Global_Reach}")
+        return f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions, and is ranked {self.Rank} with a global reach of {self.Global_Reach}"

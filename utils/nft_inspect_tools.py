@@ -136,14 +136,14 @@ def get_collection_members(engine, collection, usersTable):
 
 
 def get_db_members_collections_stats(engine, collections, usersTable):
-    print("Collections :", collections, "\n")
+    # print("Collections :", collections, "\n")
     m_tot_df = pd.DataFrame()
     for collection in collections:
-        print("Collection :", collection, "\n")
         sleep(0.25)
         m_df = get_collection_members(engine, collection, usersTable)
         m_tot_df = pd.concat([m_tot_df, m_df])
-    print(m_tot_df)
+        print("Collection :", collection, "iterated and completed...\n")
+    # print(m_tot_df)
     return m_tot_df
 
 
@@ -152,11 +152,10 @@ def get_wearing_list(members_df):
     rank_list, global_reach_list = [], []
     iter = 0
 
-    print("MEMBERS DF: ", members_df, "/n")
+    print("MEMBERS DF: ", members_df, "\n")
 
     for member in members_df["Name"].values:
-        # print("Member Name :", member, "\n")
-        # print("Member Wearing PFP :", bool(members_df["Wearing PFP"].values[iter]),
+        # print(f "Member {member} Wearing PFP :", bool(members_df["Wearing PFP"].values[iter]),
         #   "\n")
         if members_df["Wearing PFP"].values[iter] > 0:
             # print(
@@ -173,7 +172,6 @@ def get_wearing_list(members_df):
             # print(f"{member} pfp check failed - skip", "\n")
         iter += 1
     # print(f"Members wearing PFP: {wearing_list}", "\n")
-    # print("Wearing List: ", wearing_list)
     return wearing_list, rank_list, global_reach_list
 
 
