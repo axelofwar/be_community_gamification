@@ -409,6 +409,7 @@ def get_stream(update_flag, remove_flag):
                         retweets = 0
                         replies = 0
                         impressions = 0
+                        print("stuck in except of user in wearing_list loop")
 
                     if user in users_df["Name"].values:
                         # print("USER NAME ENDPOINT RESPONSE: ", response.json())
@@ -429,6 +430,7 @@ def get_stream(update_flag, remove_flag):
                         except:
                             username = users_df.loc[users_df["Name"]
                                                     == user, "index"].values[0]
+                            print("stuck in except of user in users_df loop")
                             # this could be the engager so we need to handle this better in the case the api doesnt return data
                             # OR we need to preserve the included_author_username in the users table
                             # instead of the engager as the index and propogate that change throughout the code
@@ -453,6 +455,10 @@ def get_stream(update_flag, remove_flag):
                             )
                             print(
                                 f"User {user} iterated through and updated if required\
+                                    \nWaiting for next...")
+                        else:
+                            print(
+                                f"User {user} already tracked and no updates required\
                                     \nWaiting for next...")
 
                     else:

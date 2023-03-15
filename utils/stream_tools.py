@@ -462,18 +462,43 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
             user_index = user_exists.idxmax()
             user_row = pfp_table.loc[user_index]
             updates = {}
-            if agg_likes > user_row["Favorites"]:
-                updates["Favorites"] = agg_likes
-            if agg_retweets > user_row["Retweets"]:
-                updates["Retweets"] = agg_retweets
-            if agg_replies > user_row["Replies"]:
-                updates["Replies"] = agg_replies
-            if agg_impressions > user_row["Impressions"]:
-                updates["Impressions"] = agg_impressions
-            if rank > user_row["Rank"]:
-                updates["Rank"] = rank
-            if global_reach > user_row["Global_Reach"]:
-                updates["Global_Reach"] = global_reach
+
+            '''
+            check if the value is None, and if it is then assign
+            the value of the table. If it is None, compare the max of
+            the current value and the new value
+            '''
+
+            if user_row["Favorites"] is None or agg_likes > user_row["Favorites"]:
+                updates["Favorites"] = agg_likes if user_row["Favorites"] is None else max(
+                    agg_likes, user_row["Favorites"])
+            if user_row["Retweets"] is None or agg_retweets > user_row["Retweets"]:
+                updates["Retweets"] = agg_retweets if user_row["Retweets"] is None else max(
+                    agg_retweets, user_row["Retweets"])
+            if user_row["Replies"] is None or agg_replies > user_row["Replies"]:
+                updates["Replies"] = agg_replies if user_row["Replies"] is None else max(
+                    agg_replies, user_row["Replies"])
+            if user_row["Impressions"] is None or agg_impressions > user_row["Impressions"]:
+                updates["Impressions"] = agg_impressions if user_row["Impressions"] is None else max(
+                    agg_impressions, user_row["Impressions"])
+            if user_row["Rank"] is None or rank > user_row["Rank"]:
+                updates["Rank"] = rank if user_row["Rank"] is None else max(
+                    rank, user_row["Rank"])
+            if user_row["Global_Reach"] is None or global_reach > user_row["Global_Reach"]:
+                updates["Global_Reach"] = global_reach if user_row["Global_Reach"] is None else max(
+                    global_reach, user_row["Global_Reach"])
+            # if agg_likes > user_row["Favorites"]:
+            #     updates["Favorites"] = agg_likes
+            # if agg_retweets > user_row["Retweets"]:
+            #     updates["Retweets"] = agg_retweets
+            # if agg_replies > user_row["Replies"]:
+            #     updates["Replies"] = agg_replies
+            # if agg_impressions > user_row["Impressions"]:
+            #     updates["Impressions"] = agg_impressions
+            # if rank > user_row["Rank"]:
+            #     updates["Rank"] = rank
+            # if global_reach > user_row["Global_Reach"]:
+            #     updates["Global_Reach"] = global_reach
 
             if updates:
                 pfp_table.loc[user_index, updates.keys()] = updates.values()
