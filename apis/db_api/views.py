@@ -81,24 +81,35 @@ class UpdateRule(APIView):
     def post(self, request):
         # Get the new value from the request data
         try:
-            data = json.loads(request.body)
+            data = json.load(request.body)
+            rule, tag = data.split(',')
+            print("rule: ", rule)
+            print("tag: ", tag)
         except Exception as err:
             print(
                 f"Error: {err} with request: {request} of data: {request.body}")
             if 'b' in str(request.body):
                 string = str(request.body)
                 data = string.replace("b'", "")
-                print("data: ", data)
+                print("\ndata: ", data)
+                rule, tag = data.split(',')
+                # rule = rule.replace("'", "")
+                print("\nrule: ", rule)
+                tag = tag.replace("'", "")
+                tag = tag.replace(" ", "")
+                print("\ntag: ", tag)
+
             # data = json.dumps(data, ensure_ascii=False)
             # data = yaml.dump(data, allow_unicode=True)
         try:
             # Read the YAML file and update the ADD_RULE keypair
             with open('../utils/yamls/config.yml', 'r') as yaml_file:
                 config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
-                config_data['ADD_RULE'] = data
 
             # Save the updated YAML file
             with open('../utils/yamls/config.yml', 'w') as yaml_file:
+                config_data['ADD_RULE'] = str(rule)
+                config_data['ADD_TAG'] = str(tag)
                 yaml.dump(config_data, yaml_file)
 
             # call function to update the rules

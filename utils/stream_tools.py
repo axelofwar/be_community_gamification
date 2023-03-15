@@ -138,6 +138,7 @@ def update_rules():
 
     if "ADD_RULE" in config:
         rule = config["ADD_RULE"]
+        tag = config["ADD_TAG"]
         update_flag = True
         print("UPDATED TO TRUE: ", update_flag)
     else:
@@ -154,6 +155,7 @@ def update_rules():
         update_flag = False
     with open("utils/yamls/config.yml", "w") as file:
         config["ADD_RULE"] = ""
+        # config["ADD_TAG"] = ""
         yaml.dump(config, file)
         print("RULE RESET TO EMPTY")
 
@@ -565,4 +567,25 @@ def create_dataFrame(id, author_username, author_name, likes, retweets, replies,
         index=authors_index, data=id, columns=["Tweet ID"])
     df = pd.concat([df0, df1, df2, df3, df4, df5], axis=1)
 
+    return df
+
+
+def create_metric_dataFrame(id, author_username, author_name, likes, retweets, replies, impressions, tag):
+    authors_index = [author_username]
+
+    df0 = pd.DataFrame(
+        index=authors_index, data=author_name, columns=["Author"])
+    df1 = pd.DataFrame(
+        index=authors_index, data=int(likes), columns=["Favorites"])
+    df2 = pd.DataFrame(
+        index=authors_index, data=int(retweets), columns=["Retweets"])
+    df3 = pd.DataFrame(
+        index=authors_index, data=int(replies), columns=["Replies"])
+    df4 = pd.DataFrame(
+        index=authors_index, data=int(impressions), columns=["Impressions"])
+    df5 = pd.DataFrame(
+        index=authors_index, data=id, columns=["Tweet ID"])
+    df6 = pd.DataFrame(
+        index=authors_index, data=tag, columns=["Tag"])
+    df = pd.concat([df0, df1, df2, df3, df4, df5, df6], axis=1)
     return df

@@ -112,6 +112,7 @@ def check_metrics_table(engine, table_name):
               Column('Replies', Integer),
               Column('Impressions', Integer),
               Column('Tweet ID', Text),
+              Column('Tags', Text),
               )
         metadata.create_all()
         print("Metrics Table created")
