@@ -2,8 +2,8 @@ import json
 import os
 import requests
 import yaml
-import postgres_tools as pg
 import pandas as pd
+from config import Config
 from dotenv import load_dotenv
 if 'GITHUB_ACTION' not in os.environ:
     load_dotenv()
@@ -18,14 +18,20 @@ Tools for interacting with the Twitter API in a filtered stream - contains funct
     - Updating the rules on the Twitter API
 '''
 
-update_flag = False
-with open("utils/yamls/config.yml", "r") as file:
-    config = yaml.load(file, Loader=yaml.FullLoader)
+# update_flag = False
+# with open("utils/yamls/config.yml", "r") as file:
+#     config = yaml.load(file, Loader=yaml.FullLoader)
 
 bearer_token = os.environ.get("TWITTER_BEARER_TOKEN")
-# bearer_token = os.environ["TWITTER_BEARER_TOKEN"]
-tweetsTable = config["metrics_table_name"]
-usersTable = config["aggregated_table_name"]
+# config = Config.get_config()
+# if config.get_config() is None:
+#     config = Config()
+config = Config()
+
+tweetsTable = config.get_metrics_table_name()
+usersTable = config.get_aggregated_table_name()
+# tweetsTable = config["metrics_table_name"]
+# usersTable = config["aggregated_table_name"]
 
 
 # SET BEARER TOKEN AUTH
@@ -89,35 +95,37 @@ def delete_all_rules(rules):
 
 
 # SET CURRENT STREAM RULES
-def set_rules(delete, update_flag):
+def set_rules():
+    config = Config.get_config()
+    myRules = config.get_rules()
+    tags = config.get_tags()
+    rules = []
+    for rule in config.get_rules():
+        rules.append(
+            {"value": rule, "tag": tags[myRules.index(rule)]})
+    print(("ADDED RULES USED:\n", rules))
+
     # add more error handling for real-time rule adjustment gaps
-    with open("utils/yamls/rules.yml", "r") as file:
-        axel_rules = yaml.load(file, Loader=yaml.FullLoader)
+    # with open("utils/yamls/rules.yml", "r") as file:
+    #     axel_rules = yaml.load(file, Loader=yaml.FullLoader)
 
-    print("RULES SAVED TO rules.yml")
-    print("UPDATE VALUE IN SET: ", update_flag)
-    if update_flag:
-        axel_rules = axel_rules + \
-            [{"value": config["ADD_RULE"], "tag": config["ADD_TAG"]}, ]
-        with open("utils/yamls/rules.yml", "w") as file:
-            file.write(str(axel_rules))
-
-        print("RULE VALUE UPDATED:\n", update_flag)
-        print(("ADDED RULES USED:\n", axel_rules))
+    # print("RULES SAVED TO rules.yml")
+    # rules = rules + \
+    # [{"value": config["ADD_RULE"], "tag": config["ADD_TAG"]}, ]
+    # with open("utils/yamls/rules.yml", "w") as file:
+    #     file.write(str(axel_rules))
 
     # Reconnect stream if not active and set rules again
     response = requests.get(
         "https://api.twitter.com/2/tweets/search/stream/rules", auth=bearer_oauth
     )
-    rules = get_rules()
+    axel_rules = get_rules()
     if response.status_code != 200:
-        delete_all_rules(rules)
+        delete_all_rules(axel_rules)
         print("Reconnecting to the stream...")
-        with open("utils/yamls/config.yml", "w") as file:
-            config["RECONNECT_COUNT"] += 1
-            yaml.dump(config, file)
+        config.increment_recount()
 
-    payload = {"add": axel_rules}
+    payload = {"add": rules}
     response = requests.post(
         "https://api.twitter.com/2/tweets/search/stream/rules",
         auth=bearer_oauth,
@@ -133,36 +141,42 @@ def set_rules(delete, update_flag):
 
 # UPDATE CURRENT STREAM RULES
 def update_rules():
-    with open("utils/yamls/config.yml", "r") as file:
-        config = yaml.load(file, Loader=yaml.FullLoader)
+    if config.get_update_flag() == True:
+        print("UPDATING RULES")
+        delete_all_rules(get_rules())
+        set_rules()
+        config.set_add_rule("", "")
+        config.set_update_flag(False)
+    # with open("utils/yamls/config.yml", "r") as file:
+    #     config = yaml.load(file, Loader=yaml.FullLoader)
 
-    if "ADD_RULE" in config:
-        rule = config["ADD_RULE"]
-        tag = config["ADD_TAG"]
-        update_flag = True
-        print("UPDATED TO TRUE: ", update_flag)
-    else:
-        print("No rule to add")
+    # if "ADD_RULE" in config:
+    #     rule = config["ADD_RULE"]
+    #     tag = config["ADD_TAG"]
+    #     update_flag = True
+    #     print("UPDATED TO TRUE: ", update_flag)
+    # else:
+    #     print("No rule to add")
 
-    if rule == "":
-        update_flag = False
-        print("UPDATED TO FALSE: ", update_flag)
-    else:
-        print("SETTING NEW RULES")
-        delete = delete_all_rules(get_rules())
+    # if rule == "":
+    #     update_flag = False
+    #     print("UPDATED TO FALSE: ", update_flag)
+    # else:
+    #     print("SETTING NEW RULES")
+    #     delete = delete_all_rules(get_rules())
 
-        set_rules(delete, update_flag)
-        update_flag = False
-    with open("utils/yamls/config.yml", "w") as file:
-        config["ADD_RULE"] = ""
-        # config["ADD_TAG"] = ""
-        yaml.dump(config, file)
-        print("RULE RESET TO EMPTY")
+    #     set_rules(delete, update_flag)
+    #     update_flag = False
+    # with open("utils/yamls/config.yml", "w") as file:
+    #     config["ADD_RULE"] = ""
+    #     # config["ADD_TAG"] = ""
+    #     yaml.dump(config, file)
+    #     print("RULE RESET TO EMPTY")
 
 
 # REMOVE CURRENT STREAM RULES
 def remove_rules(rules):
-    remove_it = config["REMOVE_RULE"]
+    remove_it = config.get_remove_rule()
     if remove_it == "":
         print("NO RULE IN CONFIG TO REMOVE")
         return None
@@ -179,7 +193,7 @@ def remove_rules(rules):
         print("REMOVE RULE RESET TO EMPTY")
 
     delete_all_rules(get_rules())
-    set_rules(new_rules, update_flag)
+    set_rules(new_rules)
     remove_flag = True
     return remove_flag
 
@@ -214,7 +228,7 @@ def get_tweet_metrics(tweet_id):
 
 
 '''
-TODO: Confirm that the update_aggregated_metrics function is 
+TODO: Confirm that the update_aggregated_metrics function is
 working as intended. It should only update rows that have changed
 and not the entire table. We still need to confirm if the += logic
 being using to aggregate the values is correct. It should be
@@ -267,40 +281,10 @@ def update_aggregated_metrics(engine, author_username, users_df, tweets_df):
         print(f"No changes to aggregated values for {author_username}")
 
 
-# # Filter the rows where the index matches the author_username
-#     user_rows = tweets_df[tweets_df["index"] == author_username]
-
-#     for _, row in user_rows.iterrows():
-#         # Sum up the columns and add the result to the respective aggregated variable
-#         aggregated_likes += row["Favorites"]
-#         aggregated_retweets += row["Retweets"]
-#         aggregated_replies += row["Replies"]
-#         aggregated_impressions += row["Impressions"]
-
-#     # If `aggregated_impressions` is still 0, add the value from `users_df`
-#     if aggregated_impressions == 0:
-#         aggregated_impressions = users_df.loc[users_df["index"]
-#                                               == author_username]["Impressions"].values[0]
-
-#     # Update the aggregated values in `users_df`
-#     users_df.loc[users_df["index"] == author_username,
-#                  "Favorites"] = aggregated_likes
-#     users_df.loc[users_df["index"] == author_username,
-#                  "Retweets"] = aggregated_retweets
-#     users_df.loc[users_df["index"] == author_username,
-#                  "Replies"] = aggregated_replies
-#     users_df.loc[users_df["index"] == author_username,
-#                  "Impressions"] = aggregated_impressions
-
-#     # Write the updated `users_df` to the database
-#     users_df.to_sql(usersTable, engine, if_exists="replace", index=False)
-#     print(f"Aggregated values for {author_username} in Users table updated")
-#     print("DF Users Table: ", users_df)
-
 '''
 TODO: Confirm that the update_tweets_table function is working properly
 this method should only update the values in the table if they have increased
-If it isn't then use the one below it that replaces the whole table
+If it isn't then use then revert to chatGPT-helpbot's method of updating the table
 '''
 
 
@@ -369,73 +353,15 @@ def update_tweets_table(engine, id, tweets_df, included_likes, included_retweets
     print("Metrics table updated")
 
 
-# def update_tweets_table(engine, id, tweets_df, included_likes, included_retweets, included_replies, included_impressions):
-#     print(
-#         f"Tweet #{id} already exists in Metrics table")
-#     print("Updating Metrics table...")
-#     row = tweets_df.loc[tweets_df["Tweet ID"]
-#                         == id]
-#     # print("Row Vals: ", row.values)
-
-#     row = row.values[0]
-#     # print("Size row: ", len(row))
-#     if len(row) > 6:
-#         row = row[1:]
-#         if "level_0" in tweets_df.columns:
-#             print("DAMNIT")
-#             tweets_df.dropna(inplace=True)
-#             tweets_df.drop(
-#                 columns=["level_0"], axis=1, inplace=True)
-#     favorites = row[2]
-#     retweets = row[3]
-#     replies = row[4]
-#     impressions = row[5]
-
-#     # update the values in the existing table
-#     if int(included_likes) > int(favorites):
-#         print(f"Metrics Likes updated to {included_likes}")
-#         tweets_df.loc[tweets_df["Tweet ID"] == id, [
-#             "Favorites"]] = included_likes
-#     if int(included_retweets) > int(retweets):
-#         print(
-#             f"Metrics Retweets updated to {included_retweets}")
-#         tweets_df.loc[tweets_df["Tweet ID"] == id, [
-#             "Retweets"]] = included_retweets
-#     if int(included_replies) > int(replies):
-#         print(
-#             f"Metrics Replies updated to {included_replies}")
-#         tweets_df.loc[tweets_df["Tweet ID"] == id, [
-#             "Replies"]] = included_replies
-#     if int(included_impressions) > int(impressions):
-#         print(
-#             f"Metrics Impressions updated to {included_impressions}")
-#         tweets_df.loc[tweets_df["Tweet ID"] == id, [
-#             "Impressions"]] = included_impressions
-
-#     if "level_0" in tweets_df.columns:
-#         print("DAMNIT")
-#         tweets_df.drop(
-#             columns=["level_0"], inplace=True)
-
-#     # rework this to write only the updated values - not rewrite the whole table
-#     tweets_df.to_sql(
-#         tweetsTable, engine, if_exists="replace", index=False)
-#     # here we are losing the engager on updates in favor of not addding duplicates
-#     # and also not messing with our existing index values
-
-#     # continue here
-#     # decide how to update only the rows that have changed
-#     # get totals of engagers vs. author and weight them accordingly
-#     print("User in Metrics Table updated")
 '''
 TODO: Confirm that the update_pfp_tracked_table function is working properly
 this method should only update the values in the table if they have increased
-If it isn't then use the one below it that replaces the whole table
+If it isn't then use then revert to chatGPT-helpbot's method of updating the table
 '''
 
 
 def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach):
-    pfp_table_name = config["pfp_table_name"]
+    pfp_table_name = config.get_pfp_table_name()
     print("Updating PFP Tracked Table...")
     # check if the user is already in the table
     pfp_table = pd.read_sql_table(pfp_table_name, engine)
@@ -487,18 +413,6 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
             if user_row["Global_Reach"] is None or global_reach > user_row["Global_Reach"]:
                 updates["Global_Reach"] = global_reach if user_row["Global_Reach"] is None else max(
                     global_reach, user_row["Global_Reach"])
-            # if agg_likes > user_row["Favorites"]:
-            #     updates["Favorites"] = agg_likes
-            # if agg_retweets > user_row["Retweets"]:
-            #     updates["Retweets"] = agg_retweets
-            # if agg_replies > user_row["Replies"]:
-            #     updates["Replies"] = agg_replies
-            # if agg_impressions > user_row["Impressions"]:
-            #     updates["Impressions"] = agg_impressions
-            # if rank > user_row["Rank"]:
-            #     updates["Rank"] = rank
-            # if global_reach > user_row["Global_Reach"]:
-            #     updates["Global_Reach"] = global_reach
 
             if updates:
                 pfp_table.loc[user_index, updates.keys()] = updates.values()
@@ -522,67 +436,6 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
     return pfp_table
 
 
-# def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions):
-#     pfp_table_name = config["pfp_table_name"]
-#     print("Updating PFP Tracked Table...")
-#     # check if the user is already in the table
-#     pfp_table = pd.read_sql_table(pfp_table_name, engine)
-
-#     if pfp_table.empty == True:
-#         print("PFP Tracked Table is empty")
-#         pfp_table = pd.DataFrame(index=[username],
-#                                  data=[
-#                                      [username, name, agg_likes, agg_retweets, agg_replies, agg_impressions]],
-#                                  columns=["index", "Name", "Favorites", "Retweets", "Replies", "Impressions"])
-#         print("PFP Tracked Table Created: ", pfp_table)
-#         pfp_table.to_sql(
-#             pfp_table_name, engine, if_exists="replace", index=False)
-#         print(f"User {name} added to PFP Tracked Table")
-
-#     iter = 0
-#     if username in pfp_table["index"].values:
-#         # print(f"User {name} already exists in PFP Tracked Table")
-#         # update the values in the existing table only if they are greater than the existing values
-#         if int(agg_likes) > int(pfp_table.loc[pfp_table["index"] == username, "Favorites"].values[iter]):
-#             print(f"PFP Tracked Likes updated to {agg_likes}")
-#             pfp_table.loc[pfp_table["index"] == name, [
-#                 "Favorites"]] = agg_likes
-#         if int(agg_retweets) > int(pfp_table.loc[pfp_table["index"] == username, "Retweets"].values[iter]):
-#             print(
-#                 f"PFP Tracked Retweets updated to {agg_retweets}")
-#             pfp_table.loc[pfp_table["index"] == name, [
-#                 "Retweets"]] = agg_retweets
-#         if int(agg_replies) > int(pfp_table.loc[pfp_table["index"] == username, "Replies"].values[iter]):
-#             print(
-#                 f"PFP Tracked Replies updated to {agg_replies}")
-#             pfp_table.loc[pfp_table["index"] == name, [
-#                 "Replies"]] = agg_replies
-#         if int(agg_impressions) > int(pfp_table.loc[pfp_table["index"] == username, "Impressions"].values[iter]):
-#             print(
-#                 f"PFP Tracked Impressions updated to {agg_impressions}")
-#             pfp_table.loc[pfp_table["index"] == username, [
-#                 "Impressions"]] = agg_impressions
-
-#         iter += 1
-
-#         pfp_table.to_sql(
-#             pfp_table_name, engine, if_exists="replace", index=False)
-#     # print("DF PFP Tracked Replaced Table: ", pfp_table)
-
-#     if username not in pfp_table["index"].values:
-#         print(f"User {username} does not exist in PFP Tracked Table")
-#         # add the user to the table
-#         pfp_table = pd.DataFrame(index=[name],
-#                                  data=[[username, name, agg_likes, agg_retweets, agg_replies, agg_impressions]], columns=["index", "Name", "Favorites", "Retweets", "Replies", "Impressions"])
-#         pfp_table.to_sql(
-#             pfp_table_name, engine, if_exists="append", index=False)
-#         print(
-#             f"User {username} added to PFP Tracked table")
-#     # print("DF PFP Tracked Appended Table: ", pfp_table)
-
-#     return pfp_table
-
-
 def create_dataFrame(id, author_username, author_name, likes, retweets, replies, impressions):
     authors_index = [author_username]
 
@@ -597,7 +450,7 @@ def create_dataFrame(id, author_username, author_name, likes, retweets, replies,
     df4 = pd.DataFrame(
         index=authors_index, data=int(impressions), columns=["Impressions"])
     df5 = pd.DataFrame(
-        index=authors_index, data=id, columns=["Tweet ID"])
+        index=authors_index, data=id, columns=["Tweet_ID"])
     df = pd.concat([df0, df1, df2, df3, df4, df5], axis=1)
 
     return df
@@ -617,8 +470,21 @@ def create_metric_dataFrame(id, author_username, author_name, likes, retweets, r
     df4 = pd.DataFrame(
         index=authors_index, data=int(impressions), columns=["Impressions"])
     df5 = pd.DataFrame(
-        index=authors_index, data=id, columns=["Tweet ID"])
+        index=authors_index, data=id, columns=["Tweet_ID"])
     df6 = pd.DataFrame(
         index=authors_index, data=tag, columns=["Tag"])
     df = pd.concat([df0, df1, df2, df3, df4, df5, df6], axis=1)
     return df
+
+
+def main():
+    config = Config()
+    config = Config.get_config()
+    Config.set_add_rule("myRule", "accounts")
+    Config.update_rules()
+    Config.set_remove_rule("myRule")
+    Config.update_rules()
+    update_rules()
+
+
+main()
