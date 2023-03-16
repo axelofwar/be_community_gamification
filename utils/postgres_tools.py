@@ -4,6 +4,7 @@ import yaml
 import csv
 import os
 import subprocess
+from config import Config
 # import filtered_stream as fs
 from sqlalchemy import create_engine, Table, Column, Integer, Text, MetaData, select
 from dotenv import load_dotenv
@@ -33,24 +34,29 @@ TODO: add functions for adding columns to the table if they don't exist:
 POSTGRES_ADMIN_USER = "postgres"
 # POSTGRES_USER = os.getenv("POSTGRES_USERNAME")  # github actions
 # POSTGRES_USER = os.environ["POSTGRES_USERNAME"] # for local testing
-POSTGRES_USER = os.getenv("RENDER_USERNAME")  # render database
+POSTGRES_USER = os.getenv("DATABASE_USERNAME")  # render database
 
 # POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")  # github actions
 # POSTGRES_PASSWORD = os.environ["POSTGRES_PASSWORD"] # for local testing
-POSTGRES_PASSWORD = os.getenv("RENDER_PASSWORD")  # render database
+POSTGRES_PASSWORD = os.getenv("DATABASE_PASSWORD")  # render database
 
 # POSTGRES_HOST = os.getenv("POSTGRESQL_HOST")  # github actions
 # POSTGRES_HOST = os.environ["POSTGRESQL_HOST"] # for local testing
-POSTGRES_HOST = os.getenv("RENDER_HOST")  # render database
+POSTGRES_HOST = os.getenv("DATABASE_HOST")  # render database
 
 # POSTGRES_PORT = os.getenv("POSTGRESQL_PORT")  # github actions
 # POSTGRES_PORT = os.environ["POSTGRESQL_PORT"] # for local testing
-POSTGRES_PORT = os.getenv("RENDER_PORT")  # render database
+POSTGRES_PORT = os.getenv("DATABASE_PORT")  # render database
 
-with open("utils/yamls/config.yml", "r") as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
+# with open("utils/yamls/config.yml", "r") as f:
+#     config = yaml.load(f, Loader=yaml.FullLoader)
 
-table_name = config["metrics_table_name"]
+config = Config.get_config()
+if config.get_config() is None:
+    config = Config()
+
+# table_name = config["metrics_table_name"]
+table_name = config.get_metrics_table_name()
 
 # POSTGRES SUBPROCESS FUNCTIONS
 # CSV FUNCTIONS

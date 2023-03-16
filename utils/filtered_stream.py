@@ -8,6 +8,7 @@ import yaml
 import stream_tools as st
 import postgres_tools as pg
 import nft_inspect_tools as nft
+from config import Config
 
 if 'GITHUB_ACTION' not in os.environ:
     load_dotenv()
@@ -45,19 +46,26 @@ TODO:
     - or do we want to have multiple instances for each project connecting to our same database that can modify their own rules?
 '''
 
-with open("utils/yamls/config.yml", "r") as file:
-    config = yaml.load(file, Loader=yaml.FullLoader)
-# To set your enviornment variables in your terminal run the following line:
-    config["RECONNECT_COUNT"] = 0
+# with open("utils/yamls/config.yml", "r") as file:
+#     config = yaml.load(file, Loader=yaml.FullLoader)
+# # To set your enviornment variables in your terminal run the following line:
+#     config["RECONNECT_COUNT"] = 0
 
 # Twitter API constants
 # bearer_token = os.environ.get("TWITTER_BEARER_TOKEN")
 # bearer_token = os.environ["TWITTER_BEARER_TOKEN"]
 # Postgres constants
-engine = pg.start_db(config["db_name"])
-tweetsTable = config["metrics_table_name"]
-usersTable = config["aggregated_table_name"]
-pfpTable = config["pfp_table_name"]
+config = Config.get_config()
+print("Type of config: ", type(config))
+if config is None:
+    config = Config()
+
+
+engine = pg.start_db(config.db_name)
+print("Type of config: ", type(config))
+tweetsTable = config.get_metrics_table_name()
+usersTable = config.get_aggregated_table_name
+pfpTable = config.get_pfp_table_name()
 
 
 # check if tables exist and create if not
@@ -66,8 +74,8 @@ pg.check_users_table(engine, usersTable)
 pg.check_pfp_table(engine, pfpTable)
 
 # Init flags and empty frames for those used throughout the app
-update_flag = False
-remove_flag = False
+# update_flag = False
+# remove_flag = False
 author = ""
 df = pd.DataFrame()
 export_df = pd.DataFrame()
@@ -78,7 +86,8 @@ export_include_df = pd.DataFrame()
 #     return export_include_df
 
 
-def get_stream(update_flag, remove_flag):
+def get_stream():
+    config = Config.get_config()
     response = requests.get(
         "https://api.twitter.com/2/tweets/search/stream", auth=st.bearer_oauth, stream=True,
     )
@@ -89,15 +98,16 @@ def get_stream(update_flag, remove_flag):
         print("TOO MANY REQUESTS")
         time.sleep(300)  # wait 5 minutes
         # waiting only 60 seconds doesn't seem to solve the problem
-        get_stream(update_flag, remove_flag)
+        get_stream()
 
     if response.status_code != 200:
         try:
             print("Reconnecting to the stream...")
-            with open("utils/yamls/config.yml", "w") as file:
-                config["RECONNECT_COUNT"] += 1
-                yaml.dump(config, file)
-            st.set_rules(st.delete_all_rules(st.get_rules()), update_flag)
+            # with open("utils/yamls/config.yml", "w") as file:
+            #     config["RECONNECT_COUNT"] += 1
+            #     yaml.dump(config, file)
+            config.recount += 1
+            st.set_rules(st.delete_all_rules(st.get_rules()))
         except:
             raise Exception(
                 "Cannot get stream (HTTP {}): {}".format(
@@ -107,14 +117,14 @@ def get_stream(update_flag, remove_flag):
     for response_line in response.iter_lines():
         if response_line:
             print("\n\nGOT RESPONSE!")
-            if update_flag:
+            if config.get_update_flag():
                 print("UPDATING RULES")
                 st.update_rules()
-                update_flag = False
-            if remove_flag:
-                print("REMOVING RULES")
-                st.remove_rules(st.get_rules())
-                remove_flag = False
+                config.set_update_flag(False)
+            # if remove_flag:
+            #     print("REMOVING RULES")
+            #     st.remove_rules(st.get_rules())
+            #     remove_flag = False
 
             json_response = json.loads(response_line)
 
@@ -171,11 +181,12 @@ def get_stream(update_flag, remove_flag):
 
             except KeyError as ke:
                 print("KeyError occured: ", ke)
-                with open("utils/yamls/config.yml", "w") as file:
-                    config["RECONNECT_COUNT"] += 1
-                    yaml.dump(config, file)
+                config.increment_recount()
+                # with open("utils/yamls/config.yml", "w") as file:
+                #     config["RECONNECT_COUNT"] += 1
+                #     yaml.dump(config, file)
                 print("Restarting stream...")
-                get_stream(update_flag, remove_flag)
+                get_stream()
 
             id = tweet_data["data"]["id"]
             print("\nTweet ID by tweet_data: ", id)
@@ -376,7 +387,7 @@ def get_stream(update_flag, remove_flag):
 
                 # if user is already being tracked, add them to the users table
                 members_df = nft.get_db_members_collections_stats(
-                    engine, config["collections"], usersTable)
+                    engine, config.collections, usersTable)
 
                 # print("MEMBERS DF: ", members_df)
                 # members_df.to_csv("outputs/current_member.csv")
@@ -480,8 +491,10 @@ def get_stream(update_flag, remove_flag):
 def main():
     rules = st.get_rules()
     delete = st.delete_all_rules(rules)
-    set = st.set_rules(delete, update_flag)
-    get_stream(update_flag, remove_flag)
+    config.set_add_rule("y00ts", "y00ts")
+    config.set_add_rule("degods", "DeGods")
+    set = st.set_rules()
+    get_stream()
 
 
 if __name__ == "__main__":
