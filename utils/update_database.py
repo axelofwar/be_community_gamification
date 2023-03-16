@@ -1,7 +1,8 @@
 import os
-import yaml
+# import yaml
 import pandas as pd
 import postgres_tools as pg
+from config import Config
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -14,14 +15,18 @@ The db is updated by comparing the tweet id of the new tweet to the tweet ids in
 We are using postgresql for the db and engine is our connection to the 'test' db
 For use -> change # test data to the data you want to test against the db
 '''
+config = Config.get_config()
+if config.get_config() is None:
+    config = Config()
 
-bearer_token = os.environ.get("TWITTER_BEARER_TOKEN")
+bearer_token = config.TWITTER_BEARER_TOKEN
 engine = pg.start_db("test")
 
-with open("utils/yamls/config.yml", "r") as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
+# with open("utils/yamls/config.yml", "r") as f:
+#     config = yaml.load(f, Loader=yaml.FullLoader)
 
-table_name = config["metrics_table_name"]
+
+table_name = config.metrics_table_name
 
 # test data
 included_id = "1628657154742792197"

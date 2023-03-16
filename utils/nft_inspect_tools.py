@@ -4,7 +4,8 @@ from time import sleep
 
 import requests
 import pandas as pd
-import yaml
+# import yaml
+from config import Config
 
 '''
 Tools for interacting with the NFTInspect API - contains functions for:
@@ -14,38 +15,41 @@ Tools for interacting with the NFTInspect API - contains functions for:
     - Getting the collection members data frame
 '''
 
-with open("utils/yamls/config.yml", "r") as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
+# with open("utils/yamls/config.yml", "r") as f:
+#     config = yaml.load(f, Loader=yaml.FullLoader)
+config = Config.get_config()
+if config.get_config() is None:
+    config = Config()
 
 
 def add_collection_to_track(collection):
     # Add collection to track
-    with open("utils/yamls/config.yml", "r") as f:
-        config = yaml.safe_load(f)
+    # with open("utils/yamls/config.yml", "r") as f:
+    #     config = yaml.safe_load(f)
 
-    if collection not in config["collections"]:
-        config["collections"].append(collection)
+    if collection not in config.collections:
+        config.append_collections(collection)
     else:
-        print(f"{collection} already in config.yml")
+        print(f"{collection} already in config class")
 
-    with open("utils/yamls/config.yml", "w") as f:
-        yaml.dump(config, f)
+    # with open("utils/yamls/config.yml", "w") as f:
+    #     yaml.dump(config, f)
 
     return
 
 
 def remove_collection_to_track(collection):
     # Remove collection to track
-    with open("utils/yamls/config.yml", "r") as f:
-        config = yaml.safe_load(f)
+    # with open("utils/yamls/config.yml", "r") as f:
+    #     config = yaml.safe_load(f)
 
-    if collection in config["collections"]:
-        config["collections"].remove(collection)
+    if collection in config.get_collections():
+        config.collections.remove(collection)
     else:
-        print(f"{collection} not found in config.yml")
+        print(f"{collection} not found in config class")
 
-    with open("utils/yamls/config.yml", "w") as f:
-        yaml.dump(config, f)
+    # with open("utils/yamls/config.yml", "w") as f:
+    #     yaml.dump(config, f)
 
     return
 
