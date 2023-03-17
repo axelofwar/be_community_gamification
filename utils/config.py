@@ -4,101 +4,101 @@ if 'GITHUB_ACTION' not in os.environ:
     load_dotenv()
 
 
+# class Config:
+#     def __init__(self):
+#         self.add_rule = ""
+#         self.add_tag = ""
+#         self.remove_rule = ""
+#         self.account_to_query = ""
+#         self.collections = []
+#         self.rules = []
+#         self.tags = []
+#         self.db_name = "community_gamification"
+#         self.metrics_table_name = "metrics_table"
+#         self.pfp_table_name = "pfp_table"
+#         self.aggregated_table_name = "users_table"
+#         self.recount = 0
+#         self.leaderboard_endpoint = "leaderboard"
+#         self.database_host = "be-community-gamification.onrender.com/api/"
+#         self.update_flag = False
 class Config:
-    def __init__(cls):
-        cls.add_rule = ""
-        cls.add_tag = ""
-        cls.remove_rule = ""
-        cls.account_to_query = ""
-        cls.collections = []
-        cls.rules = []
-        cls.tags = []
-        cls.db_name = "community_gamification"
-        cls.metrics_table_name = "metrics_table"
-        cls.pfp_table_name = "pfp_table"
-        cls.aggregated_table_name = "users_table"
-        cls.recount = 0
-        cls.leaderboard_endpoint = "leaderboard"
-        cls.database_host = "be-community-gamification.onrender.com/api/"
-        cls.update_flag = False
+    def __init__(self, add_rule="", add_tag="", remove_rule="", account_to_query="", collections=[], rules=[], tags=[], db_name="community_gamification", metrics_table_name="metrics_table", pfp_table_name="pfp_table", aggregated_table_name="users_table", recount=0, leaderboard_endpoint="leaderboard", database_host="be-community-gamification.onrender.com/api/", update_flag=False):
+        self.add_rule = add_rule
+        self.add_tag = add_tag
+        self.remove_rule = remove_rule
+        self.account_to_query = account_to_query
+        self.collections = collections
+        self.rules = rules
+        self.tags = tags
+        self.db_name = db_name
+        self.metrics_table_name = metrics_table_name
+        self.pfp_table_name = pfp_table_name
+        self.aggregated_table_name = aggregated_table_name
+        self.recount = recount
+        self.leaderboard_endpoint = leaderboard_endpoint
+        self.database_host = database_host
+        self.update_flag = update_flag
 
-    @classmethod
-    def get_config(cls):
-        return cls
+    def get_config(self):
+        return self
 
-    @classmethod
-    def set_add_rule(cls, rule, tag):
-        cls.add_rule = rule
-        cls.add_tag = tag
-        cls.update_flag = True
+    def set_add_rule(self, rule, tag):
+        self.add_rule = rule
+        self.add_tag = tag
+        self.collections.append(tag)
+        self.update_flag = True
 
-    @classmethod
-    def get_add_rule(cls):
-        return cls.add_rule
+    def get_add_rule(self):
+        return self.add_rule
 
-    @classmethod
-    def get_remove_rule(cls):
-        return cls.remove_rule
+    def get_remove_rule(self):
+        return self.remove_rule
 
-    @classmethod
-    def get_add_tag(cls):
-        return cls.add_tag
+    def get_add_tag(self):
+        return self.add_tag
 
-    @classmethod
-    def set_remove_rule(cls, rule):
-        cls.remove_rule = rule
-        cls.update_flag = True
+    def set_remove_rule(self, rule):
+        self.remove_rule = rule
+        self.update_flag = True
 
-    @classmethod
-    def update_rules(cls):
-        if cls.add_rule != "":
-            cls.rules.append(cls.add_rule)
-            cls.tags.append(cls.add_tag)
+    def update_rules(self):
+        if self.add_rule != "":
+            self.rules.append(self.add_rule)
+            self.tags.append(self.add_tag)
 
-        if cls.remove_rule != "":
-            cls.rules.remove(cls.remove_rule)
+        if self.remove_rule != "":
+            self.rules.remove(self.remove_rule)
 
-    @classmethod
-    def get_rules(cls):
-        return cls.rules
+    def get_rules(self):
+        return self.rules
 
-    @classmethod
-    def get_tags(cls):
-        return cls.tags
+    def get_tags(self):
+        return self.tags
 
-    @classmethod
-    def get_metrics_table_name(cls):
-        return cls.metrics_table_name
+    def get_metrics_table_name(self):
+        return self.metrics_table_name
 
-    @classmethod
-    def get_aggregated_table_name(cls):
-        return cls.aggregated_table_name
+    def get_aggregated_table_name(self):
+        return self.aggregated_table_name
 
-    @classmethod
-    def get_pfp_table_name(cls):
-        return cls.pfp_table_name
+    def get_pfp_table_name(self):
+        return self.pfp_table_name
 
-    @classmethod
-    def get_update_flag(cls):
-        return cls.update_flag
+    def get_update_flag(self):
+        return self.update_flag
 
-    @classmethod
-    def set_update_flag(cls, flag):
-        cls.update_flag = flag
+    def set_update_flag(self, flag):
+        self.update_flag = flag
 
-    @classmethod
-    def increment_recount(cls):
-        cls.recount += 1
+    def increment_recount(self):
+        self.recount += 1
 
-    @classmethod
-    def get_collections(cls):
-        return cls.collections
+    def get_collections(self):
+        return self.collections
 
-    @classmethod
-    def append_collections(cls, collection):
-        cls.collections.append(collection)
+    def append_collections(self, collection):
+        self.collections.append(collection)
 
-    @classmethod
-    def add_collection_to_track(cls, collection):
-        cls.collections.append(collection)
-        cls.update_flag = True
+    def add_collection_to_track(self, collection):
+        self.collections.append(collection)
+        self.update_flag = True

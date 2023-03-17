@@ -23,13 +23,12 @@ Tools for interacting with the Twitter API in a filtered stream - contains funct
 #     config = yaml.load(file, Loader=yaml.FullLoader)
 
 bearer_token = os.environ.get("TWITTER_BEARER_TOKEN")
+params = Config()
+
 # config = Config.get_config()
 # if config.get_config() is None:
 #     config = Config()
-config = Config()
 
-tweetsTable = config.get_metrics_table_name()
-usersTable = config.get_aggregated_table_name()
 # tweetsTable = config["metrics_table_name"]
 # usersTable = config["aggregated_table_name"]
 
@@ -96,11 +95,19 @@ def delete_all_rules(rules):
 
 # SET CURRENT STREAM RULES
 def set_rules():
-    config = Config.get_config()
-    myRules = config.get_rules()
-    tags = config.get_tags()
+    # config = Config.get_config()
+    # myRules = config.get_rules()
+    # tags = config.get_tags()
+
+    # TODO: Determine whether we need get access modifiers or if we can
+    # just use the direct attribute from the class
+    # we should be able to use the attribute directly if configured properly
+    config = Config.get_config(params)
+    myRules = config.rules
+    tags = config.tags
     rules = []
-    for rule in config.get_rules():
+    # for rule in config.get_rules():
+    for rule in myRules:
         rules.append(
             {"value": rule, "tag": tags[myRules.index(rule)]})
     print(("ADDED RULES USED:\n", rules))
@@ -123,7 +130,7 @@ def set_rules():
     if response.status_code != 200:
         delete_all_rules(axel_rules)
         print("Reconnecting to the stream...")
-        config.increment_recount()
+        config.recount += 1
 
     payload = {"add": rules}
     response = requests.post(
@@ -137,16 +144,18 @@ def set_rules():
                 response.status_code, response.text)
         )
     print(json.dumps(response.json()))
+    config.update_flag = False
 
 
 # UPDATE CURRENT STREAM RULES
 def update_rules():
-    if config.get_update_flag() == True:
+    config = Config.get_config(params)
+
+    if config.update_flag == True:
         print("UPDATING RULES")
         delete_all_rules(get_rules())
         set_rules()
-        config.set_add_rule("", "")
-        config.set_update_flag(False)
+        config.update_flag = False
     # with open("utils/yamls/config.yml", "r") as file:
     #     config = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -176,7 +185,8 @@ def update_rules():
 
 # REMOVE CURRENT STREAM RULES
 def remove_rules(rules):
-    remove_it = config.get_remove_rule()
+    config = Config.get_config(params)
+    remove_it = config.remove_rule
     if remove_it == "":
         print("NO RULE IN CONFIG TO REMOVE")
         return None
@@ -187,15 +197,15 @@ def remove_rules(rules):
     print("NEW RULES: ", new_rules)
     with open("utils/yamls/rules.yml", "w") as file:
         file.write(str(new_rules))
-    with open("utils/yamls/config.yml", "w") as file:
-        config["REMOVE_RULE"] = ""
-        yaml.dump(config, file)
+    # with open("utils/yamls/config.yml", "w") as file:
+        config.remove_rule = ""
+        # yaml.dump(config, file)
         print("REMOVE RULE RESET TO EMPTY")
 
     delete_all_rules(get_rules())
     set_rules(new_rules)
-    remove_flag = True
-    return remove_flag
+    config.update_flag = False
+    return config.update_flag
 
 
 # USE TWEETS ENDPOINT TO GET TWEEET DATA BY TWEET ID
@@ -237,6 +247,8 @@ being using to aggregate the values is correct. It should be
 
 
 def update_aggregated_metrics(engine, author_username, users_df, tweets_df):
+    config = Config.get_config(params)
+    usersTable = config.get_aggregated_table_name()
     # Get the row in `users_df` where the index matches the author_username
     user_row = users_df[users_df["index"] == author_username]
     current_likes = user_row["Favorites"].values[0]
@@ -289,11 +301,13 @@ If it isn't then use then revert to chatGPT-helpbot's method of updating the tab
 
 
 def update_tweets_table(engine, id, tweets_df, included_likes, included_retweets, included_replies, included_impressions):
+    config = Config.get_config(params)
+    tweetsTable = config.get_metrics_table_name()
     print(
         f"Tweet #{id} already exists in Metrics table +\
         \nUpdating Metrics table...")
     # get the row that needs to be updated
-    row = tweets_df.loc[tweets_df["Tweet ID"] == id]
+    row = tweets_df.loc[tweets_df["Tweet_ID"] == id]
     row = row.values[0]
 
     # drop unnecessary columns if present
@@ -314,25 +328,25 @@ def update_tweets_table(engine, id, tweets_df, included_likes, included_retweets
     updated_metrics = {}
     if int(included_likes) > int(favorites):
         print(f"Metrics Likes updated to {included_likes}")
-        tweets_df.loc[tweets_df["Tweet ID"] ==
+        tweets_df.loc[tweets_df["Tweet_ID"] ==
                       id, ["Favorites"]] = included_likes
         updated_metrics["Favorites"] = included_likes
 
     if int(included_retweets) > int(retweets):
         print(f"Metrics Retweets updated to {included_retweets}")
-        tweets_df.loc[tweets_df["Tweet ID"] ==
+        tweets_df.loc[tweets_df["Tweet_ID"] ==
                       id, ["Retweets"]] = included_retweets
         updated_metrics["Retweets"] = included_retweets
 
     if int(included_replies) > int(replies):
         print(f"Metrics Replies updated to {included_replies}")
-        tweets_df.loc[tweets_df["Tweet ID"] ==
+        tweets_df.loc[tweets_df["Tweet_ID"] ==
                       id, ["Replies"]] = included_replies
         updated_metrics["Replies"] = included_replies
 
     if int(included_impressions) > int(impressions):
         print(f"Metrics Impressions updated to {included_impressions}")
-        tweets_df.loc[tweets_df["Tweet ID"] == id,
+        tweets_df.loc[tweets_df["Tweet_ID"] == id,
                       ["Impressions"]] = included_impressions
         updated_metrics["Impressions"] = included_impressions
 
@@ -342,7 +356,7 @@ def update_tweets_table(engine, id, tweets_df, included_likes, included_retweets
         engine.execute(f"""
             UPDATE {tweetsTable}
             SET {','.join([f'"{k}" = {v}' for k,v in updated_metrics.items()])}
-            WHERE "Tweet ID" = '{id}'
+            WHERE "Tweet_ID" = '{id}'
         """)  # extra ' after f is needed to uppercase the column names
 
     # drop unnecessary columns if present
@@ -361,6 +375,7 @@ If it isn't then use then revert to chatGPT-helpbot's method of updating the tab
 
 
 def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach):
+    config = Config.get_config(params)
     pfp_table_name = config.get_pfp_table_name()
     print("Updating PFP Tracked Table...")
     # check if the user is already in the table
@@ -477,14 +492,20 @@ def create_metric_dataFrame(id, author_username, author_name, likes, retweets, r
     return df
 
 
-def main():
-    config = Config()
-    config = Config.get_config()
-    Config.set_add_rule("myRule", "accounts")
-    Config.update_rules()
-    Config.set_remove_rule("myRule")
-    Config.update_rules()
-    update_rules()
+# def main():
+#     config = Config.get_config(params)
+#     # config = Config()
+#     # config = Config.get_config()
+#     # Config.set_add_rule("myRule", "accounts")
+#     # Config.update_rules()
+#     # Config.set_remove_rule("myRule")
+#     # Config.update_rules()
+#     # update_rules()
+#     config.get_config()
+#     config.set_add_rule("myRule", "accounts")
+#     config.update_rules()
+#     config.set_remove_rule("myRule")
+#     config.update_rules()
 
 
-main()
+# main()
