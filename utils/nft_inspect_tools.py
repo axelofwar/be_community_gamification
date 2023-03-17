@@ -17,12 +17,12 @@ Tools for interacting with the NFTInspect API - contains functions for:
 
 # with open("utils/yamls/config.yml", "r") as f:
 #     config = yaml.load(f, Loader=yaml.FullLoader)
-config = Config.get_config()
-if config.get_config() is None:
-    config = Config()
+config = Config()
 
 
 def add_collection_to_track(collection):
+    Config.get_config()
+
     # Add collection to track
     # with open("utils/yamls/config.yml", "r") as f:
     #     config = yaml.safe_load(f)
@@ -39,6 +39,8 @@ def add_collection_to_track(collection):
 
 
 def remove_collection_to_track(collection):
+    Config.get_config()
+
     # Remove collection to track
     # with open("utils/yamls/config.yml", "r") as f:
     #     config = yaml.safe_load(f)
@@ -140,7 +142,7 @@ def get_collection_members(engine, collection, usersTable):
 
 
 def get_db_members_collections_stats(engine, collections, usersTable):
-    # print("Collections :", collections, "\n")
+    print("Collections :", collections, "\n")
     m_tot_df = pd.DataFrame()
     for collection in collections:
         sleep(0.25)

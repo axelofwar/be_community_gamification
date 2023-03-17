@@ -55,17 +55,21 @@ TODO:
 # bearer_token = os.environ.get("TWITTER_BEARER_TOKEN")
 # bearer_token = os.environ["TWITTER_BEARER_TOKEN"]
 # Postgres constants
-config = Config.get_config()
-print("Type of config: ", type(config))
-if config is None:
-    config = Config()
+
+# print("Type of config: ", type(config))
+# if config is None:
+# params = Config()
+params = st.params
 
 
-engine = pg.start_db(config.db_name)
-print("Type of config: ", type(config))
-tweetsTable = config.get_metrics_table_name()
-usersTable = config.get_aggregated_table_name
-pfpTable = config.get_pfp_table_name()
+engine = pg.start_db(params.db_name)
+# print("Type of config: ", type(config))
+tweetsTable = params.metrics_table_name
+# tweetsTable = config.get_metrics_table_name()
+usersTable = params.aggregated_table_name
+# usersTable = config.get_aggregated_table_name
+pfpTable = params.pfp_table_name
+# pfpTable = config.get_pfp_table_name()
 
 
 # check if tables exist and create if not
@@ -87,7 +91,7 @@ export_include_df = pd.DataFrame()
 
 
 def get_stream():
-    config = Config.get_config()
+    config = Config.get_config(params)
     response = requests.get(
         "https://api.twitter.com/2/tweets/search/stream", auth=st.bearer_oauth, stream=True,
     )
@@ -106,6 +110,7 @@ def get_stream():
             # with open("utils/yamls/config.yml", "w") as file:
             #     config["RECONNECT_COUNT"] += 1
             #     yaml.dump(config, file)
+            # thisConfig.recount += 1
             config.recount += 1
             st.set_rules(st.delete_all_rules(st.get_rules()))
         except:
@@ -117,10 +122,10 @@ def get_stream():
     for response_line in response.iter_lines():
         if response_line:
             print("\n\nGOT RESPONSE!")
-            if config.get_update_flag():
+            if config.update_flag == True:
                 print("UPDATING RULES")
                 st.update_rules()
-                config.set_update_flag(False)
+                config.update_flag = False
             # if remove_flag:
             #     print("REMOVING RULES")
             #     st.remove_rules(st.get_rules())
@@ -147,7 +152,7 @@ def get_stream():
             # aggregate (x/y)*engagement to original author
             # aggregate (x/x)*engagement to quote/retweeter
 
-            print("\nTweet ID: ", id)
+            print("\nTweet_ID: ", id)
             tweet_data = st.get_data_by_id(id)
 
             # improve wait/sleep to make sure rules GET call has returned json respones
@@ -181,7 +186,8 @@ def get_stream():
 
             except KeyError as ke:
                 print("KeyError occured: ", ke)
-                config.increment_recount()
+                # config.increment_recount()
+                config.recount += 1
                 # with open("utils/yamls/config.yml", "w") as file:
                 #     config["RECONNECT_COUNT"] += 1
                 #     yaml.dump(config, file)
@@ -189,7 +195,7 @@ def get_stream():
                 get_stream()
 
             id = tweet_data["data"]["id"]
-            print("\nTweet ID by tweet_data: ", id)
+            print("\nTweet_ID by tweet_data: ", id)
             engagement_metrics = st.get_tweet_metrics(id)
             tweet_favorite_count = int(engagement_metrics["favorite_count"])
             tweet_retweet_count = int(engagement_metrics["retweet_count"])
@@ -209,7 +215,7 @@ def get_stream():
             df2 = pd.DataFrame(index=authors_index, data=int(
                 tweet_retweet_count), columns=["Retweets"])
             df3 = pd.DataFrame(index=authors_index,
-                               data=id, columns=["Tweet ID"])
+                               data=id, columns=["Tweet_ID"])
             df = pd.concat([df0, df1, df2, df3], axis=1)
 
             # export_df = df
@@ -231,7 +237,7 @@ def get_stream():
                     included_impressions = int(
                         included_pub_metrics["impression_count"])
 
-                    # print("\nIncluded Tweet ID: ", included_id)
+                    # print("\nIncluded Tweet_ID: ", included_id)
                     # print("\nIncluded/Parent Tweet Author ID: ",
                     #       included_author_id)
 
@@ -319,7 +325,7 @@ def get_stream():
                         print("Data appended to table")
 
                     tweets_df = pd.read_sql_table(tweetsTable, engine)
-                    if included_id in tweets_df["Tweet ID"].values:
+                    if included_id in tweets_df["Tweet_ID"].values:
                         st.update_tweets_table(engine, included_id, tweets_df, included_likes,
                                                included_retweets, included_replies, included_impressions)
                     else:
@@ -389,7 +395,7 @@ def get_stream():
                 members_df = nft.get_db_members_collections_stats(
                     engine, config.collections, usersTable)
 
-                # print("MEMBERS DF: ", members_df)
+                print("MEMBERS FILT DF: ", members_df)
                 # members_df.to_csv("outputs/current_member.csv")
 
                 wearing_list, rank_list, global_reach_list = nft.get_wearing_list(
@@ -491,8 +497,11 @@ def get_stream():
 def main():
     rules = st.get_rules()
     delete = st.delete_all_rules(rules)
+    config = Config.get_config(params)
     config.set_add_rule("y00ts", "y00ts")
-    config.set_add_rule("degods", "DeGods")
+    config.update_rules()
+    config.set_add_rule("DeGods", "degods")
+    config.update_rules()
     set = st.set_rules()
     get_stream()
 

@@ -48,15 +48,6 @@ POSTGRES_HOST = os.getenv("DATABASE_HOST")  # render database
 # POSTGRES_PORT = os.environ["POSTGRESQL_PORT"] # for local testing
 POSTGRES_PORT = os.getenv("DATABASE_PORT")  # render database
 
-# with open("utils/yamls/config.yml", "r") as f:
-#     config = yaml.load(f, Loader=yaml.FullLoader)
-
-config = Config.get_config()
-if config.get_config() is None:
-    config = Config()
-
-# table_name = config["metrics_table_name"]
-table_name = config.get_metrics_table_name()
 
 # POSTGRES SUBPROCESS FUNCTIONS
 # CSV FUNCTIONS
