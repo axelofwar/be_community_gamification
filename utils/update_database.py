@@ -15,18 +15,16 @@ The db is updated by comparing the tweet id of the new tweet to the tweet ids in
 We are using postgresql for the db and engine is our connection to the 'test' db
 For use -> change # test data to the data you want to test against the db
 '''
-config = Config.get_config()
-if config.get_config() is None:
-    config = Config()
+config = Config()
 
-bearer_token = config.TWITTER_BEARER_TOKEN
+bearer_token = os.environ.get("TWITTER_BEARER_TOKEN")
 engine = pg.start_db("test")
 
 # with open("utils/yamls/config.yml", "r") as f:
 #     config = yaml.load(f, Loader=yaml.FullLoader)
 
 
-table_name = config.metrics_table_name
+#
 
 # test data
 included_id = "1628657154742792197"
@@ -36,6 +34,9 @@ included_reply_count = 7
 
 
 def main():
+    Config.get_config()
+    table_name = config.metrics_table_name
+
     existing_df = pd.read_sql_table(table_name, engine)
     indexes = existing_df.index.values
     print("Indexes: ", indexes)
@@ -48,10 +49,10 @@ def main():
         existing_df.to_sql(table_name, engine, if_exists="replace")
         print("Replaced it")
         print("New columns: ", existing_df.columns)
-    if included_id in existing_df["Tweet ID"].values:
+    if included_id in existing_df["Tweet_ID"].values:
         print(f"Tweet #{included_id} already exists in table")
         print("Updating table...")
-        row = existing_df.loc[existing_df["Tweet ID"]
+        row = existing_df.loc[existing_df["Tweet_ID"]
                               == included_id]
         print("Row Vals: ", row.values)
         row = row.values[0]
@@ -65,15 +66,15 @@ def main():
         # update the values in the existing table
         if int(included_likes) > int(favorites):
             print(f"Likes updated to {included_likes}")
-            existing_df.loc[existing_df["Tweet ID"] == included_id, [
+            existing_df.loc[existing_df["Tweet_ID"] == included_id, [
                 "Favorites"]] = int(included_likes)
         if int(included_retweets) > int(retweets):
             print(f"Retweets updated to {included_retweets}")
-            existing_df.loc[existing_df["Tweet ID"] == included_id, [
+            existing_df.loc[existing_df["Tweet_ID"] == included_id, [
                 "Retweets"]] = int(included_retweets)
         if int(included_reply_count) > int(replies):
             print(f"Replies updated to {included_reply_count}")
-            existing_df.loc[existing_df["Tweet ID"] == included_id, [
+            existing_df.loc[existing_df["Tweet_ID"] == included_id, [
                 "Replies"]] = int(included_reply_count)
         print("POST REPLACE: ", existing_df)
 

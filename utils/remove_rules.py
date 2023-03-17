@@ -8,16 +8,16 @@ Then run update_rules.py to update the rules on the Twitter API
 Then reset the REMOVE_RULE in the config.yml file to ""
 '''
 
-config = Config.get_config()
-if config.get_config() is None:
-    config = Config()
+
+params = Config()
 
 
-def main():
-    config.set_remove_rule("myRule")
-    config.update_rules()
-    st.update_rules()
-    return
+# def main():
+#     config = Config.get_config(params)
+#     config.remove_rule = "myRule"
+#     config.update_rules()
+#     st.update_rules()
+#     return
 
 
-main()
+# main()

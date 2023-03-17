@@ -19,7 +19,7 @@ with open("utils/yamls/config.yml", "r") as f:
 
 
 class gpt_UI:
-    file = open("utils/yamls/config.yml", "r+")
+    file = open("utils/yamls/config.xyml", "r+")
     config = yaml.load(file, Loader=yaml.FullLoader)
 
     def __init__(self):
