@@ -98,14 +98,17 @@ class UpdateRule(APIView):
 
                 try:
                     # json_data = json.loads(string.split("=", 1))
-                    json_data = json.load(string)
+                    json_data = json.load(request.body)
                 except Exception as err:
                     print(
                         f"Error: {err} with request: {request} of data {string} and body: {request.body}")
                     try:
-                        json_data = json.loads(request.body)
+                        json_data = json.loads(string)
                     except Exception as err:
-                        return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
+                        try:
+                            json_data = json.loads(request)
+                        except Exception as err:
+                            return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
                 try:
                     data = json_data.replace("b'", "")
