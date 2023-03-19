@@ -94,7 +94,7 @@ class UpdateRule(APIView):
             if 'b' in str(request.body):
                 # string = str(request.body)
                 string = str(urllib.parse.unquote_plus(
-                    request.decode("utf-8")))
+                    request.body.decode("utf-8")))
 
                 try:
                     # json_data = json.loads(string.split("=", 1))
