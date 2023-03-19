@@ -1,4 +1,4 @@
-from .stream_tools import *
+from .stream_tools import update_rules
 import yaml
 
 '''
@@ -10,7 +10,6 @@ Then reset the ADD_RULE in the config.yml file to
 
 def main():
     update_rules()
-    return
 
 
 main()
