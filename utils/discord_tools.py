@@ -15,12 +15,16 @@ Tools for interacting with the Discord API - contains functions for:
     - Getting the content of a message
     - Getting the questions and keywords from messages
 '''
-
-with open("utils/yamls/config.yml", "r") as file:
-    config = yaml.load(file, Loader=yaml.FullLoader)
-
+if "utils" not in sys.path:
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    # print("Sys path: ", sys.path)
+    from utils import stream_tools as st
 
 # INITIALIZE DISCORD CLIENT
+
+params = st.params
+
+
 async def init_discord(cancel):
     # Create a Discord client
     if not cancel:
@@ -71,7 +75,7 @@ async def get_channel_history(channel_id, history_days, cancel):
         # TODO: improve logic so that client closes on complete instead of timeout required
         if not cancel:
             task = asyncio.create_task(client.start(discord_token))
-            await asyncio.wait_for(task, config["timeout"])
+            await asyncio.wait_for(task, params.timeout)
         else:
             print("TASK CANCELLED")
             sys.exit()
