@@ -84,7 +84,7 @@ class UpdateRule(APIView):
         config = params.get_config()
         # Get the new value from the request data
         try:
-            data = json.load(request.body)
+            data = json.loads(request.body)
             rule, tag = data.split(',')
             print("rule: ", rule)
             print("tag: ", tag)
@@ -98,11 +98,17 @@ class UpdateRule(APIView):
 
                 try:
                     # json_data = json.loads(string.split("=", 1))
-                    json_data = json.load(string)
+                    json_data = json.load(request.body)
                 except Exception as err:
                     print(
                         f"Error: {err} with request: {request} of data {string} and body: {request.body}")
-                    return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
+                    try:
+                        json_data = json.loads(string)
+                    except Exception as err:
+                        try:
+                            json_data = json.loads(request)
+                        except Exception as err:
+                            return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
                 try:
                     data = json_data.replace("b'", "")
