@@ -10,15 +10,16 @@ from rest_framework.views import APIView, Response, status
 from django.shortcuts import render, get_object_or_404
 from api_utils import update_rules as ur
 from api_utils import remove_rules as rr
+from api_utils import stream_tools as st
 
-
-# Get the parent directory of the current file
-
+# get params from stream tools file and use memnbers/update_flag accordingly
 
 # Create your views here.
 
-
 # Default view for the API
+params = st.params
+
+
 class Index(APIView):
     # throttle_classes = [throttle.CustomThrottle(100, 60)]
     throttle_classes = [UserRateThrottle, AnonRateThrottle]
@@ -79,6 +80,7 @@ class adminPfpTable(APIView):
 
 class UpdateRule(APIView):
     def post(self, request):
+        config = params.get_config()
         # Get the new value from the request data
         try:
             data = json.load(request.body)
@@ -102,23 +104,25 @@ class UpdateRule(APIView):
                 except Exception as err:
                     print(
                         f"Error: {err} with request: {request} of data: {request.body}")
-                    with open('../utils/yamls/config.yml', 'w') as yaml_file:
-                        config_data = yaml.load(
-                            yaml_file, Loader=yaml.FullLoader)
-                        config_data['ADD_RULE'] = ""
-                        config_data['ADD_TAG'] = ""
+                    config.add_rule = ""
+                    config.add_tag = ""
+                    # with open('../utils/yamls/config.yml', 'w') as yaml_file:
+                    #     config_data = yaml.load(
+                    #         yaml_file, Loader=yaml.FullLoader)
+                    #     config_data['ADD_RULE'] = ""
+                    #     config_data['ADD_TAG'] = ""
             # data = json.dumps(data, ensure_ascii=False)
             # data = yaml.dump(data, allow_unicode=True)
         try:
             # Read the YAML file and update the ADD_RULE keypair
-            with open('../utils/yamls/config.yml', 'r') as yaml_file:
-                config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
+            # with open('../utils/yamls/config.yml', 'r') as yaml_file:
+            #     config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
             # Save the updated YAML file
-            with open('../utils/yamls/config.yml', 'w') as yaml_file:
-                config_data['ADD_RULE'] = str(rule)
-                config_data['ADD_TAG'] = str(tag)
-                yaml.dump(config_data, yaml_file)
+            # with open('../utils/yamls/config.yml', 'w') as yaml_file:
+            config.add_rule = str(rule)
+            config.add_tag = str(tag)
+            # yaml.dump(config_data, yaml_file)
 
             # call function to update the rules
             ur.main()
@@ -133,6 +137,7 @@ class UpdateRule(APIView):
 
 class RemoveRule(APIView):
     def post(self, request):
+        config = params.get_config()
         # Get the new value from the request data
         try:
             data = json.loads(request.body)
@@ -145,18 +150,19 @@ class RemoveRule(APIView):
             data = json.dumps(data)
         try:
             # Read the YAML file and update the ADD_RULE keypair
-            with open('../utils/yamls/config.yml', 'r') as yaml_file:
-                config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
-                config_data['REMOVE_RULE'] = data
+            # with open('../utils/yamls/config.yml', 'r') as yaml_file:
+            #     config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
+            #     config_data['REMOVE_RULE'] = data
+            config.remove_rule = data
 
             # Save the updated YAML file
-            with open('../utils/yamls/config.yml', 'w') as yaml_file:
-                yaml.dump(config_data, yaml_file)
+            # with open('../utils/yamls/config.yml', 'w') as yaml_file:
+            #     yaml.dump(config_data, yaml_file)
 
             # call function from utils to remove rule
             rr.main()
             # Return a success response with the updated YAML file
-            return Response({'message': 'Config updated successfully', 'config_data': config_data}, status=status.HTTP_200_OK)
+            return Response({'message': 'Config updated successfully', 'config_data': config}, status=status.HTTP_200_OK)
 
         except Exception as e:
             # Return an error response if there was an exception while updating the YAML file
