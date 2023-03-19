@@ -1,6 +1,7 @@
 import os
 import tweepy
 import yaml
+import sys
 
 '''
 Tools for interacting with twitter API - single instance calls - contains functions for:
@@ -11,10 +12,12 @@ Tools for interacting with twitter API - single instance calls - contains functi
 The keys for the twitter API are stored in the .env file
 '''
 
-with open("utils/yamls/config.yml", "r") as file:
-    config = yaml.load(file, Loader=yaml.FullLoader)
-
+if "utils" not in sys.path:
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    # print("Sys path: ", sys.path)
+    from utils import stream_tools as st
 running = True
+params = st.params
 
 
 # INITIALIZE TWITTER API
@@ -32,7 +35,7 @@ async def init_twitter():
 async def call_once(api, account, cancel):
     if not cancel:
         tweets = api.search_tweets(
-            q=account, count=config["tweet_history"])
+            q=account, count=params.timeout)
         print("TWEET HISTORY CALLED ONCE \n")
         return tweets
     else:
