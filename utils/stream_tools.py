@@ -4,6 +4,7 @@ import requests
 import yaml
 import pandas as pd
 import sys
+
 from dotenv import load_dotenv
 if 'GITHUB_ACTION' not in os.environ:
     load_dotenv()
@@ -109,7 +110,7 @@ def set_rules():
     myRules = config.rules
     tags = config.tags
     rules = []
-
+    
     if params.update_flag == True:
         myRules.append(config.add_rule)
         tags.append(config.add_tag)
