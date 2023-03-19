@@ -1,11 +1,11 @@
 import os
 import sys
 import json
-import yaml
+import urllib.parse
 from django.core.cache import cache
 from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
-from .serializers import *
-from .models import *
+from .serializers import TweetSerializer
+from .models import Tweet
 from rest_framework.views import APIView, Response, status
 from django.shortcuts import render, get_object_or_404
 from api_utils import update_rules as ur
@@ -90,13 +90,45 @@ class UpdateRule(APIView):
             print("tag: ", tag)
         except Exception as err:
             print(
-                f"Error: {err} with request: {request} of data: {request.body}")
+                f"Error: {err} with request: {request} of type {type(request)} and data: {request.body}")
             if 'b' in str(request.body):
-                string = str(request.body)
+                # string = str(request.body)
+                string = str(urllib.parse.unquote_plus(
+                    request.body.decode("utf-8")))
+
                 try:
-                    data = string.replace("b'", "")
+                    # json_data = json.loads(string.split("=", 1))
+                    json_data = json.load(string)
+                except Exception as err:
+                    print(
+                        f"Error: {err} with request: {request} of data {string} and body: {request.body}")
+                    return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
+
+                try:
+                    data = json_data.replace("b'", "")
                     print("\ndata: ", data)
                     rule, tag = data.split(',')
+                    print(f"\nrule: {rule}, tag: {tag}")
+                    # rule = rule.replace("'", "")
+                    tag = tag.replace("'", "")
+                    tag = tag.replace(" ", "")
+                    print(f"\nCleaned tag: {tag} ")
+                except Exception as err:
+                    # print("No b in request body")
+                    return Response({f'No b in request string {json_data} of body {data} message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
+                    # print(
+                    #     f"Error: {err} with request: {request} of type {type(request)} and data: {request.body}")
+                    # return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                try:
+                    string = request.body.decode("utf-8")
+                    json_data = json.loads(string.split("=", 1)[1])
+                    print("\data: ", string)
+                    data = string.replace("'", "")
+                    # print("\ndata: ", data)
+                    rule, tag = data.split(',')
+                    print("\nrule: ", rule)
+                    print("\ntag: ", tag)
                     # rule = rule.replace("'", "")
                     print("\nrule: ", rule)
                     tag = tag.replace("'", "")
@@ -104,41 +136,23 @@ class UpdateRule(APIView):
                     print("\ntag: ", tag)
                 except Exception as err:
                     print(
-                        f"Error: {err} with request: {request} of data: {request.body}")
+                        f"Error: {err} with request: {request} of type {type(request)} and data: {request.body}")
+                    return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
+
+                try:
+                    config.add_rule = rule
+                    config.add_tag = tag
+
+                # call function to update the rules
+                    ur.main()
                     config.add_rule = ""
                     config.add_tag = ""
-
-                    # with open('../utils/yamls/config.yml', 'w') as yaml_file:
-                    #     config_data = yaml.load(
-                    #         yaml_file, Loader=yaml.FullLoader)
-                    #     config_data['ADD_RULE'] = ""
-                    #     config_data['ADD_TAG'] = ""
-            # data = json.dumps(data, ensure_ascii=False)
-            # data = yaml.dump(data, allow_unicode=True)
-                    try:
-                        # Read the YAML file and update the ADD_RULE keypair
-                        # with open('../utils/yamls/config.yml', 'r') as yaml_file:
-                        #     config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
-
-                        # Save the updated YAML file
-                        # with open('../utils/yamls/config.yml', 'w') as yaml_file:
-                        config.add_rule = str(rule)
-                        config.add_tag = str(tag)
-                    # yaml.dump(config_data, yaml_file)
-
-                    # call function to update the rules
-                        ur.main()
-                    except Exception as err:
-                        print("Error updating config: ", err,
-                              "rule: ", rule, "tag: ", tag)
-
-            # Return a success response with the updated YAML file
+                    # Return a success response with the updated YAML file
                     return Response({'message': 'Config updated successfully', 'config_data': config}, status=status.HTTP_200_OK)
-
                 except Exception as e:
                     # Return an error response if there was an exception while updating the YAML file
                     tb = traceback.format_exc()
-                    err_msg = f"Error updating config: {str(e)}\n{tb}"
+                    err_msg = f"Error updating config: {str(e)}\n{tb}, rule: {config.add_rule}, tag: {config.add_tag}"
                     # Return an error response with the detailed error message
                     return Response({'message': err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -157,15 +171,7 @@ class RemoveRule(APIView):
                 data = string.replace("b'", "")
             data = json.dumps(data)
         try:
-            # Read the YAML file and update the ADD_RULE keypair
-            # with open('../utils/yamls/config.yml', 'r') as yaml_file:
-            #     config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
-            #     config_data['REMOVE_RULE'] = data
             config.remove_rule = data
-
-            # Save the updated YAML file
-            # with open('../utils/yamls/config.yml', 'w') as yaml_file:
-            #     yaml.dump(config_data, yaml_file)
 
             # call function from utils to remove rule
             rr.main()

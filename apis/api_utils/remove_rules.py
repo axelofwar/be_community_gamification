@@ -1,4 +1,4 @@
-from .stream_tools import *
+from .stream_tools import remove_rules
 import yaml
 
 '''
@@ -10,7 +10,6 @@ Then reset the REMOVE_RULE in the config.yml file to ""
 
 def main():
     remove_rules()
-    return
 
 
 main()
