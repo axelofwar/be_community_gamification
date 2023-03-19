@@ -1,11 +1,22 @@
+# from ...utils import stream_tools as st
+# from be_community_gamification.utils import stream_tools as st
+from dotenv import load_dotenv
 import json
 import os
 import requests
 import yaml
 import pandas as pd
+import sys
+
+if "utils" not in sys.path:
+    sys.path.append(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__)))))
+    from utils import stream_tools as st
+
+# print(sys.path)
+
 # from utils.config import Config
-from ...utils import stream_tools as st
-from dotenv import load_dotenv
+
 if 'GITHUB_ACTION' not in os.environ:
     load_dotenv()
 

@@ -3,11 +3,14 @@ import os
 import requests
 import yaml
 import pandas as pd
-from config import Config
+import sys
 from dotenv import load_dotenv
 if 'GITHUB_ACTION' not in os.environ:
     load_dotenv()
-
+if "utils" not in sys.path:
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    # print("Sys path: ", sys.path)
+    from config import Config
 '''
 Tools for interacting with the Twitter API in a filtered stream - contains functions for:
     - Setting up the bearer token

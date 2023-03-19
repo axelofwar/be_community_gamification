@@ -128,7 +128,7 @@ class UpdateRule(APIView):
             ur.main()
 
             # Return a success response with the updated YAML file
-            return Response({'message': 'Config updated successfully', 'config_data': config_data}, status=status.HTTP_200_OK)
+            return Response({'message': 'Config updated successfully', 'config_data': config}, status=status.HTTP_200_OK)
 
         except Exception as e:
             # Return an error response if there was an exception while updating the YAML file
