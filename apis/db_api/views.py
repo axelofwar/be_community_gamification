@@ -107,6 +107,7 @@ class UpdateRule(APIView):
                         f"Error: {err} with request: {request} of data: {request.body}")
                     config.add_rule = ""
                     config.add_tag = ""
+
                     # with open('../utils/yamls/config.yml', 'w') as yaml_file:
                     #     config_data = yaml.load(
                     #         yaml_file, Loader=yaml.FullLoader)
@@ -114,19 +115,22 @@ class UpdateRule(APIView):
                     #     config_data['ADD_TAG'] = ""
             # data = json.dumps(data, ensure_ascii=False)
             # data = yaml.dump(data, allow_unicode=True)
-                try:
-                    # Read the YAML file and update the ADD_RULE keypair
-                    # with open('../utils/yamls/config.yml', 'r') as yaml_file:
-                    #     config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
+                    try:
+                        # Read the YAML file and update the ADD_RULE keypair
+                        # with open('../utils/yamls/config.yml', 'r') as yaml_file:
+                        #     config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-                    # Save the updated YAML file
-                    # with open('../utils/yamls/config.yml', 'w') as yaml_file:
-                    config.add_rule = str(rule)
-                    config.add_tag = str(tag)
+                        # Save the updated YAML file
+                        # with open('../utils/yamls/config.yml', 'w') as yaml_file:
+                        config.add_rule = str(rule)
+                        config.add_tag = str(tag)
                     # yaml.dump(config_data, yaml_file)
 
                     # call function to update the rules
-                    ur.main()
+                        ur.main()
+                    except Exception as err:
+                        print("Error updating config: ", err,
+                              "rule: ", rule, "tag: ", tag)
 
             # Return a success response with the updated YAML file
                     return Response({'message': 'Config updated successfully', 'config_data': config}, status=status.HTTP_200_OK)
