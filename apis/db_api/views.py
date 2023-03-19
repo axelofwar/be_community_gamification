@@ -11,6 +11,7 @@ from django.shortcuts import render, get_object_or_404
 from api_utils import update_rules as ur
 from api_utils import remove_rules as rr
 from api_utils import stream_tools as st
+import traceback
 
 # get params from stream tools file and use memnbers/update_flag accordingly
 
@@ -113,26 +114,29 @@ class UpdateRule(APIView):
                     #     config_data['ADD_TAG'] = ""
             # data = json.dumps(data, ensure_ascii=False)
             # data = yaml.dump(data, allow_unicode=True)
-        try:
-            # Read the YAML file and update the ADD_RULE keypair
-            # with open('../utils/yamls/config.yml', 'r') as yaml_file:
-            #     config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
+                try:
+                    # Read the YAML file and update the ADD_RULE keypair
+                    # with open('../utils/yamls/config.yml', 'r') as yaml_file:
+                    #     config_data = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-            # Save the updated YAML file
-            # with open('../utils/yamls/config.yml', 'w') as yaml_file:
-            config.add_rule = str(rule)
-            config.add_tag = str(tag)
-            # yaml.dump(config_data, yaml_file)
+                    # Save the updated YAML file
+                    # with open('../utils/yamls/config.yml', 'w') as yaml_file:
+                    config.add_rule = str(rule)
+                    config.add_tag = str(tag)
+                    # yaml.dump(config_data, yaml_file)
 
-            # call function to update the rules
-            ur.main()
+                    # call function to update the rules
+                    ur.main()
 
             # Return a success response with the updated YAML file
-            return Response({'message': 'Config updated successfully', 'config_data': config}, status=status.HTTP_200_OK)
+                    return Response({'message': 'Config updated successfully', 'config_data': config}, status=status.HTTP_200_OK)
 
-        except Exception as e:
-            # Return an error response if there was an exception while updating the YAML file
-            return Response({'message': 'Error updating config: {}'.format(str(e))}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                except Exception as e:
+                    # Return an error response if there was an exception while updating the YAML file
+                    tb = traceback.format_exc()
+                    err_msg = f"Error updating config: {str(e)}\n{tb}"
+                    # Return an error response with the detailed error message
+                    return Response({'message': err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class RemoveRule(APIView):
