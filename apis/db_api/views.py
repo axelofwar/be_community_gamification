@@ -79,6 +79,9 @@ class adminPfpTable(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+# TODO: fix this to properly parse the request body and update the rules
+# ultimately I think I may remove this in favor of ssh into the server and update project's tracked in filtered stream directly
+# OR I could just update the collections called and deploy a new version of the app, with replica handling in the paid version of render
 class UpdateRule(APIView):
     def post(self, request):
         config = params.get_config()
@@ -92,23 +95,14 @@ class UpdateRule(APIView):
             print(
                 f"Error: {err} with request: {request} of type {type(request)} and data: {request.body}")
             if 'b' in str(request.body):
-                # string = str(request.body)
-                string = str(urllib.parse.unquote_plus(
-                    request.body.decode("utf-8")))
+                string = str(request.body.decode("utf-8"))
+                # string = str(urllib.parse.unquote_plus(
+                #     request.body.decode("utf-8")))
 
                 try:
-                    # json_data = json.loads(string.split("=", 1))
-                    json_data = json.load(request.body)
+                    json_data = json.loads(string.split("=", 1))
                 except Exception as err:
-                    print(
-                        f"Error: {err} with request: {request} of data {string} and body: {request.body}")
-                    try:
-                        json_data = json.loads(string)
-                    except Exception as err:
-                        try:
-                            json_data = json.loads(request)
-                        except Exception as err:
-                            return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
                 try:
                     data = json_data.replace("b'", "")
@@ -122,9 +116,6 @@ class UpdateRule(APIView):
                 except Exception as err:
                     # print("No b in request body")
                     return Response({f'No b in request string {json_data} of body {data} message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
-                    # print(
-                    #     f"Error: {err} with request: {request} of type {type(request)} and data: {request.body}")
-                    # return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 try:
                     string = request.body.decode("utf-8")

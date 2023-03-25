@@ -150,6 +150,7 @@ def check_pfp_table(engine, table_name):
               Column("Impressions", Integer),
               Column("Rank", Integer),
               Column("Global_Reach", Integer),
+              Column("PFP_Url", Text),
               )
         metadata.create_all()
         print(f"{table_name} created")

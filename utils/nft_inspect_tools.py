@@ -67,13 +67,16 @@ def get_simple_members(collection):
         )
 
     output = response.json()
+    # print("Output: ", output)
     members = output["members"]
     for member in members:
         name = member["name"]
         rank = member["rank"]
         reach = member["globalReach"]
+        pfpUrl = member["pfpUrl"]
 
-        print(f"Member {name} has rank: {rank} and global reach: {reach}")
+        print(
+            f"Member {name} has rank: {rank} and global reach: {reach} with pfp url: {pfpUrl}")
 
     return members
 
@@ -101,6 +104,7 @@ def get_collection_members(engine, collection, usersTable):
             "Rank": [],
             "Time With Token": [],
             "Time With Collection": [],
+            "PFP Url": [],
         }
     )
 
@@ -154,31 +158,31 @@ def get_db_members_collections_stats(engine, collections, usersTable):
 
 
 def get_wearing_list(members_df):
-    wearing_list = []
-    rank_list, global_reach_list = [], []
-    iter = 0
+    wearing_list, rank_list, global_reach_list, pfpUrl_list = [], [], [], []
+    _iter = 0
 
     print("MEMBERS DF: ", members_df, "\n")
 
     for member in members_df["Name"].values:
         # print(f "Member {member} Wearing PFP :", bool(members_df["Wearing PFP"].values[iter]),
         #   "\n")
-        if members_df["Wearing PFP"].values[iter] > 0:
+        if members_df["Wearing PFP"].values[_iter] > 0:
             # print(
             #     f"{member} pfp check successful - add/update to pfp_table", "\n")
             wearing_list.append(member)
-            rank_list.append(members_df["Rank"].values[iter])
+            rank_list.append(members_df["Rank"].values[_iter])
             # print("Rank :", members_df["Rank"].values[iter], "\n")
             global_reach_list.append(
-                members_df["Global_Reach"].values[iter]*100)
+                members_df["Global_Reach"].values[_iter]*100)
             # print("Global Reach % :", members_df["Global Reach"].values[iter]*100,
             #       "\n")
+            pfpUrl_list.append(members_df["PFP URL"].values[_iter])
         else:
             pass
             # print(f"{member} pfp check failed - skip", "\n")
-        iter += 1
+        _iter += 1
     # print(f"Members wearing PFP: {wearing_list}", "\n")
-    return wearing_list, rank_list, global_reach_list
+    return wearing_list, rank_list, global_reach_list, pfpUrl_list
 
 
 '''

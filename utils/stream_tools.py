@@ -33,8 +33,8 @@ params = Config()
 # if config.get_config() is None:
 #     config = Config()
 
-# tweetsTable = config["metrics_table_name"]
-# usersTable = config["aggregated_table_name"]
+# tweets_table = config["metrics_table_name"]
+# users_table = config["aggregated_table_name"]
 
 
 # SET BEARER TOKEN AUTH
@@ -100,25 +100,25 @@ def delete_all_rules(rules):
 # SET CURRENT STREAM RULES
 def set_rules():
     # config = Config.get_config()
-    # myRules = config.get_rules()
+    # my_rules = config.get_rules()
     # tags = config.get_tags()
 
     # TODO: Determine whether we need get access modifiers or if we can
     # just use the direct attribute from the class
     # we should be able to use the attribute directly if configured properly
     config = Config.get_config(params)
-    myRules = config.rules
+    my_rules = config.rules
     tags = config.tags
     rules = []
-    
+
     if params.update_flag == True:
-        myRules.append(config.add_rule)
+        my_rules.append(config.add_rule)
         tags.append(config.add_tag)
         params.update_flag = False
 
-    for rule in myRules:
+    for rule in my_rules:
         rules.append(
-            {"value": rule, "tag": tags[myRules.index(rule)]})
+            {"value": rule, "tag": tags[my_rules.index(rule)]})
     print(("ADDED RULES USED:\n", rules))
 
     # add more error handling for real-time rule adjustment gaps
@@ -165,31 +165,6 @@ def update_rules():
         delete_all_rules(get_rules())
         set_rules()
         config.update_flag = False
-    # with open("utils/yamls/config.yml", "r") as file:
-    #     config = yaml.load(file, Loader=yaml.FullLoader)
-
-    # if "ADD_RULE" in config:
-    #     rule = config["ADD_RULE"]
-    #     tag = config["ADD_TAG"]
-    #     update_flag = True
-    #     print("UPDATED TO TRUE: ", update_flag)
-    # else:
-    #     print("No rule to add")
-
-    # if rule == "":
-    #     update_flag = False
-    #     print("UPDATED TO FALSE: ", update_flag)
-    # else:
-    #     print("SETTING NEW RULES")
-    #     delete = delete_all_rules(get_rules())
-
-    #     set_rules(delete, update_flag)
-    #     update_flag = False
-    # with open("utils/yamls/config.yml", "w") as file:
-    #     config["ADD_RULE"] = ""
-    #     # config["ADD_TAG"] = ""
-    #     yaml.dump(config, file)
-    #     print("RULE RESET TO EMPTY")
 
 
 # REMOVE CURRENT STREAM RULES
@@ -257,7 +232,7 @@ being using to aggregate the values is correct. It should be
 
 def update_aggregated_metrics(engine, author_username, users_df, tweets_df):
     config = Config.get_config(params)
-    usersTable = config.get_aggregated_table_name()
+    users_table = config.get_aggregated_table_name()
     # Get the row in `users_df` where the index matches the author_username
     user_row = users_df[users_df["index"] == author_username]
     current_likes = user_row["Favorites"].values[0]
@@ -293,11 +268,11 @@ def update_aggregated_metrics(engine, author_username, users_df, tweets_df):
                      "Impressions"] = current_impressions
 
         # Write the updated `users_df` to the database
-        users_df.to_sql(usersTable, engine,
+        users_df.to_sql(users_table, engine,
                         if_exists="replace", index=False)
         print(
             f"Aggregated values for {author_username} in Users table updated")
-        print("Agg DF Users Table: ", users_df)
+        # print("Agg DF Users Table: ", users_df)
     else:
         print(f"No changes to aggregated values for {author_username}")
 
@@ -311,7 +286,7 @@ If it isn't then use then revert to chatGPT-helpbot's method of updating the tab
 
 def update_tweets_table(engine, id, tweets_df, included_likes, included_retweets, included_replies, included_impressions):
     config = Config.get_config(params)
-    tweetsTable = config.get_metrics_table_name()
+    tweets_table = config.get_metrics_table_name()
     print(
         f"Tweet #{id} already exists in Metrics table +\
         \nUpdating Metrics table...")
@@ -363,14 +338,14 @@ def update_tweets_table(engine, id, tweets_df, included_likes, included_retweets
     if updated_metrics:
         print(f"Updating Tweets Table with updated metrics: {updated_metrics}")
         engine.execute(f"""
-            UPDATE {tweetsTable}
+            UPDATE {tweets_table}
             SET {','.join([f'"{k}" = {v}' for k,v in updated_metrics.items()])}
             WHERE "Tweet_ID" = '{id}'
         """)  # extra ' after f is needed to uppercase the column names
 
     # drop unnecessary columns if present
     if "level_0" in tweets_df.columns:
-        print("DAMNIT")
+        print("DAMNIT level_0 LOL")
         tweets_df.drop(columns=["level_0"], inplace=True)
 
     print("Metrics table updated")
@@ -383,7 +358,7 @@ If it isn't then use then revert to chatGPT-helpbot's method of updating the tab
 '''
 
 
-def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach):
+def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach, pfpUrl):
     config = Config.get_config(params)
     pfp_table_name = config.get_pfp_table_name()
     print("Updating PFP Tracked Table...")
@@ -400,7 +375,8 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
             "Replies": [agg_replies],
             "Impressions": [agg_impressions],
             "Rank": [rank],
-            "Global_Reach": [global_reach]
+            "Global_Reach": [global_reach],
+            "PFP_Url": [pfpUrl]
         })
         print("PFP Tracked Table Created: ", pfp_table)
         pfp_table.to_sql(pfp_table_name, engine,
@@ -450,7 +426,8 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
                 "Replies": [agg_replies],
                 "Impressions": [agg_impressions],
                 "Rank": [rank],
-                "Global_Reach": [global_reach]
+                "Global_Reach": [global_reach],
+                "PFP_Url": [pfpUrl]
             })
             pfp_table = pfp_table.append(new_row, ignore_index=True)
             pfp_table.to_sql(pfp_table_name, engine,
