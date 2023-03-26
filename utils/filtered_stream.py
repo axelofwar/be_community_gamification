@@ -4,7 +4,6 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 import time
-import yaml
 import stream_tools as st
 import postgres_tools as pg
 import nft_inspect_tools as nft
@@ -23,9 +22,8 @@ This is app for the filtered twitter stream - contains functions for:
     - Updating the rules on the Twitter API
 
 Currently we are using the filtered stream to get tweets from the following users:
-    - @axelofwar
     - @y00tsNFT
-    - DeGodsNFT
+    - @DeGodsNFT
 
 Status: Working - 2023-02-23 - run the stream and store tweets matching the rules
     - store tweet ID and get info from the stream endpoint
@@ -37,19 +35,14 @@ Status: Working - 2023-02-23 - run the stream and store tweets matching the rule
     - create users table for with aggregated metrics from tweets table
     - if user ID is not in database, add to database
     - if user ID is in database, replace WHOLE database with users_df + updated aggregated metrics
+    - create pfp table with aggregated metrics from users table taken from tweets table
+    - access nft-inspect api to get pfp status and holder rank + global reach
 
 TODO:
-    - update to replace only the row - not the whole table with replace calls when updating metrics
     - add time based functionality that resets the db every 30 days
-    - adding nft-inspect api to get pfp status and holder rank
     - do we want one app instance deploy with dynamic table and rule creation?
     - or do we want to have multiple instances for each project connecting to our same database that can modify their own rules?
 '''
-
-# with open("utils/yamls/config.yml", "r") as file:
-#     config = yaml.load(file, Loader=yaml.FullLoader)
-# # To set your enviornment variables in your terminal run the following line:
-#     config["RECONNECT_COUNT"] = 0
 
 # Twitter API constants
 # bearer_token = os.environ.get("TWITTER_BEARER_TOKEN")
@@ -63,13 +56,9 @@ params = st.params
 
 
 engine = pg.start_db(params.db_name)
-# print("Type of config: ", type(config))
 tweetsTable = params.metrics_table_name
-# tweetsTable = config.get_metrics_table_name()
 usersTable = params.aggregated_table_name
-# usersTable = config.get_aggregated_table_name
 pfpTable = params.pfp_table_name
-# pfpTable = config.get_pfp_table_name()
 
 
 # check if tables exist and create if not
@@ -78,13 +67,10 @@ pg.check_users_table(engine, usersTable)
 pg.check_pfp_table(engine, pfpTable)
 
 # Init flags and empty frames for those used throughout the app
-# update_flag = False
-# remove_flag = False
 author = ""
 df = pd.DataFrame()
 export_df = pd.DataFrame()
 export_include_df = pd.DataFrame()
-# pfp_df = pd.DataFrame()
 
 # def get_export_df():
 #     return export_include_df
@@ -107,10 +93,6 @@ def get_stream():
     if response.status_code != 200:
         try:
             print("Reconnecting to the stream...")
-            # with open("utils/yamls/config.yml", "w") as file:
-            #     config["RECONNECT_COUNT"] += 1
-            #     yaml.dump(config, file)
-            # thisConfig.recount += 1
             config.recount += 1
             st.set_rules(st.delete_all_rules(st.get_rules()))
         except:
@@ -126,16 +108,8 @@ def get_stream():
                 print("UPDATING RULES")
                 st.update_rules()
                 config.update_flag = False
-            # if remove_flag:
-            #     print("REMOVING RULES")
-            #     st.remove_rules(st.get_rules())
-            #     remove_flag = False
 
             json_response = json.loads(response_line)
-
-            # print raw data dump
-            # print(json.dumps(json_response, indent=4, sort_keys=True))
-            # data_response = json_response["data"]["text"]
 
             id = json_response["data"]["id"]
             matching_rules = json_response["matching_rules"]
@@ -148,7 +122,7 @@ def get_stream():
             '''
             print("\nTEXT: ", full_text)
 
-            # TODO: if original tweet or quoted/retweeted
+            # TODO: if original tweet or quoted/retweeted do we reward engager + author?
             # aggregate (x/y)*engagement to original author
             # aggregate (x/x)*engagement to quote/retweeter
 
@@ -165,9 +139,9 @@ def get_stream():
                             tweet_data["data"]["author_id"])
                         author_username = author["data"]["username"]
                         author_name = author["data"]["name"]
-                        print("\nAuthor ID: ", author_id)
-                        print("\nAuthor Name: ", author_name)
-                        print("\nAuthor Username: ", author_username)
+                        print(
+                            f"\nAuthor ID: {author_id}, Author Name: {author_name}, \
+                                Author Username: {author_username}")
                     else:
                         print("Author ID not found")
 
@@ -188,9 +162,6 @@ def get_stream():
                 print("KeyError occured: ", ke)
                 # config.increment_recount()
                 config.recount += 1
-                # with open("utils/yamls/config.yml", "w") as file:
-                #     config["RECONNECT_COUNT"] += 1
-                #     yaml.dump(config, file)
                 print("Restarting stream...")
                 get_stream()
 
@@ -199,8 +170,8 @@ def get_stream():
             engagement_metrics = st.get_tweet_metrics(id)
             tweet_favorite_count = int(engagement_metrics["favorite_count"])
             tweet_retweet_count = int(engagement_metrics["retweet_count"])
-            # print("\nTweet Favorites: ", tweet_favorite_count)
-            # print("\nTweet Retweets: ", tweet_retweet_count)
+            # print(
+            #     f"\nTweet Favorites: {tweet_favorite_count}, Tweet Retweets: {tweet_retweet_count}")
 
             # TODO: create a new table for each new rule(project?) allows by communtiy tracking
             # do we want to deploy a new instance of the app for each project?
@@ -376,32 +347,12 @@ def get_stream():
                             usersTable, engine, if_exists="append")
                         print("Table appended")
 
-                '''
-                DONE: search this members df to determine if the user has the pfp - which should be one of the columns
-                if they do, then search the aggregated metrics table
-                and put their metrics into a dataframe that is appended with each member that both:
-                - has the pfp
-                - has been tracked in the aggregated metrics table
-                if they don't - don't add them to the final haspfp + tracked table
-
-                TODO: determine what we want to do with rank and reach stats
-                - do we want to add them to the pfp table?
-                These are stored in lists and each index corresponds to the same 
-                index in the wearing_list - so we can use that to match the user
-                to their rank and reach and add them to the pfp table
-                '''
-
                 # if user is already being tracked, add them to the users table
                 members_df = nft.get_db_members_collections_stats(
                     engine, config.collections, usersTable)
 
-                print("MEMBERS FILT DF: ", members_df)
-                # members_df.to_csv("outputs/current_member.csv")
-
                 wearing_list, rank_list, global_reach_list = nft.get_wearing_list(
                     members_df)
-
-                # we can create and idx and add the user's rank and reach to pfp_df
 
                 for user in wearing_list:
                     # ensure we update existing tables that will be used each loop
@@ -421,12 +372,13 @@ def get_stream():
                                              == user, "Replies"].values[0]
                         impressions = pfp_df.loc[pfp_df["Name"]
                                                  == user, "Impressions"].values[0]
-                    except:
+                    except Exception as e:
                         likes = 0
                         retweets = 0
                         replies = 0
                         impressions = 0
-                        print("stuck in except of user in wearing_list loop")
+                        print(
+                            f"stuck in except of user in wearing_list loop with error {e}")
 
                     if user in users_df["Name"].values:
                         # print("USER NAME ENDPOINT RESPONSE: ", response.json())
@@ -444,10 +396,11 @@ def get_stream():
                                                         == user, "index"].values[0]
                             pass
                             # continue
-                        except:
+                        except Exception as e:
                             username = users_df.loc[users_df["Name"]
                                                     == user, "index"].values[0]
-                            print("stuck in except of user in users_df loop")
+                            print(
+                                "stuck in except of user in users_df loop with error ", e)
                             # this could be the engager so we need to handle this better in the case the api doesnt return data
                             # OR we need to preserve the included_author_username in the users table
                             # instead of the engager as the index and propogate that change throughout the code
@@ -467,7 +420,7 @@ def get_stream():
 
                         if likes < agg_likes or retweets < agg_retweets or replies < agg_replies or impressions < agg_impressions:
                             print("Updating PFP table...")
-                            pfp_updated_table = st.update_pfp_tracked_table(
+                            st.update_pfp_tracked_table(
                                 engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach
                             )
                             print(
@@ -502,6 +455,10 @@ def main():
     config.update_rules()
     config.set_add_rule("DeGods", "degods")
     config.update_rules()
+    ''' Example of adding a rule for a collection -
+     edit this through ssh to add more collections'''
+    # config.set_add_rule("CryptoPunks", "cryptopunks")
+    # config.update_rules()
     set = st.set_rules()
     get_stream()
 
