@@ -139,9 +139,9 @@ def get_stream():
                             tweet_data["data"]["author_id"])
                         author_username = author["data"]["username"]
                         author_name = author["data"]["name"]
-                        # print(
-                        #     f"\nAuthor ID: {author_id}, Author Name: {author_name}, \
-                        #         Author Username: {author_username}")
+                        print(
+                            f"\nAuthor ID: {author_id}, Author Name: {author_name}, \
+                                Author Username: {author_username}")
                     else:
                         print("Author ID not found")
 
@@ -204,7 +204,7 @@ def get_stream():
                     included_replies = int(
                         included_pub_metrics["reply_count"])
                     included_retweets = included_pub_metrics["retweet_count"]
-                    included_quote_count = included_pub_metrics["quote_count"]
+                    # included_quote_count = included_pub_metrics["quote_count"]
                     included_impressions = int(
                         included_pub_metrics["impression_count"])
 
@@ -351,7 +351,7 @@ def get_stream():
                 members_df = nft.get_db_members_collections_stats(
                     engine, config.collections, usersTable)
 
-                wearing_list, rank_list, global_reach_list, pfpUrl_list = nft.get_wearing_list(
+                wearing_list, usernames, rank_list, global_reach_list, pfpUrl_list = nft.get_wearing_list(
                     members_df)
 
                 for user in wearing_list:
@@ -361,6 +361,8 @@ def get_stream():
                     rank = rank_list[wearing_list.index(user)]
                     global_reach = global_reach_list[wearing_list.index(user)]
                     pfpUrl = pfpUrl_list[wearing_list.index(user)]
+                    username = usernames[wearing_list.index(user)]
+                    description, url = st.get_bio_url(username)
 
                     # row = pfp_df.loc[pfp_df["Name"] == user]
                     # print("ROW: ", row)
@@ -422,8 +424,11 @@ def get_stream():
                         if likes < agg_likes or retweets < agg_retweets or replies < agg_replies or impressions < agg_impressions:
                             # print("Updating PFP table...")
                             st.update_pfp_tracked_table(
-                                engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach, pfpUrl
+                                engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions,
+                                rank, global_reach, pfpUrl, description, url
                             )
+                            description = "Reset"
+                            url = "Reset"
                             print(
                                 f"User {user} iterated through and updated if required\
                                     \nWaiting for next...")
@@ -435,9 +440,9 @@ def get_stream():
                     else:
                         new_pfp_user = pd.DataFrame(index=[username],
                                                     data=[
-                                                        [username, user, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach]],
+                                                        [username, user, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach, pfpUrl, description, url]],
                                                     columns=["index", "Name", "Favorites",
-                                                             "Retweets", "Replies", "Impressions", "Rank", "Global_Reach"])
+                                                             "Retweets", "Replies", "Impressions", "Rank", "Global_Reach", "PFP_URL", "Description", "URL"])
                         new_pfp_user.to_sql(
                             pfpTable, engine, if_exists="append", index=False)
 
@@ -455,8 +460,6 @@ def main():
     config.set_add_rule("y00ts", "y00ts")
     config.update_rules()
     config.set_add_rule("DeGods", "degods")
-    config.update_rules()
-    config.set_add_rule("axelofwar", "y00ts")
     config.update_rules()
     ''' Example of adding a rule for a collection -
      edit this through ssh to add more collections'''
