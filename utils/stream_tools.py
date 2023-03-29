@@ -358,7 +358,7 @@ If it isn't then use then revert to chatGPT-helpbot's method of updating the tab
 '''
 
 
-def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach):
+def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach, pfpUrl):
     config = Config.get_config(params)
     pfp_table_name = config.get_pfp_table_name()
     print("Updating PFP Tracked Table...")
@@ -375,7 +375,8 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
             "Replies": [agg_replies],
             "Impressions": [agg_impressions],
             "Rank": [rank],
-            "Global_Reach": [global_reach]
+            "Global_Reach": [global_reach],
+            "PFP_Url": [pfpUrl]
         })
         print("PFP Tracked Table Created: ", pfp_table)
         pfp_table.to_sql(pfp_table_name, engine,
@@ -425,7 +426,8 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
                 "Replies": [agg_replies],
                 "Impressions": [agg_impressions],
                 "Rank": [rank],
-                "Global_Reach": [global_reach]
+                "Global_Reach": [global_reach],
+                "PFP_Url": [pfpUrl]
             })
             pfp_table = pfp_table.append(new_row, ignore_index=True)
             pfp_table.to_sql(pfp_table_name, engine,

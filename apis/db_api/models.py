@@ -24,6 +24,7 @@ class Tweet(models.Model):
     Impressions = models.IntegerField()
     Rank = models.IntegerField()
     Global_Reach = models.IntegerField()
+    PFP_Url = models.CharField(max_length=255)
 
     class Meta:
         # managed = False

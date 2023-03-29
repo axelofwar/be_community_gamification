@@ -20,4 +20,4 @@ class TweetSerializer(serializers.ModelSerializer):
         model = Tweet
         # fields = '__all__'
         fields = ('Name', 'Favorites', 'Retweets', 'Replies',
-                  'Impressions', 'Rank', 'Global_Reach')
+                  'Impressions', 'Rank', 'Global_Reach', 'PFP_Url')

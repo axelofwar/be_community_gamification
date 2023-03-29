@@ -351,7 +351,7 @@ def get_stream():
                 members_df = nft.get_db_members_collections_stats(
                     engine, config.collections, usersTable)
 
-                wearing_list, rank_list, global_reach_list = nft.get_wearing_list(
+                wearing_list, rank_list, global_reach_list, pfpUrl_list = nft.get_wearing_list(
                     members_df)
 
                 for user in wearing_list:
@@ -360,6 +360,7 @@ def get_stream():
                     users_df = pd.read_sql_table(usersTable, engine)
                     rank = rank_list[wearing_list.index(user)]
                     global_reach = global_reach_list[wearing_list.index(user)]
+                    pfpUrl = pfpUrl_list[wearing_list.index(user)]
 
                     # row = pfp_df.loc[pfp_df["Name"] == user]
                     # print("ROW: ", row)
@@ -421,7 +422,7 @@ def get_stream():
                         if likes < agg_likes or retweets < agg_retweets or replies < agg_replies or impressions < agg_impressions:
                             print("Updating PFP table...")
                             st.update_pfp_tracked_table(
-                                engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach
+                                engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach, pfpUrl
                             )
                             print(
                                 f"User {user} iterated through and updated if required\
