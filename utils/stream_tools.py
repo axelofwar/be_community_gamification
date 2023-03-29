@@ -1,7 +1,6 @@
 import json
 import os
 import requests
-import yaml
 import pandas as pd
 import sys
 
@@ -48,20 +47,6 @@ def bearer_oauth(r):
     return r
 
 
-# CALL USERS ENDPOINT FOR USERNAME OF TWEETER BY TWEET AUTHOR ID
-def get_username_by_author_id(author_id):
-    response = requests.get(
-        f"https://api.twitter.com/2/users/{author_id}",
-        auth=bearer_oauth
-    )
-    if response.status_code != 200:
-        raise Exception(
-            "Cannot get user data (HTTP {}): {}".format(
-                response.status_code, response.text)
-        )
-    return response.json()
-
-
 # GET RULES OF CURRENT STREAM
 def get_rules():
     response = requests.get(
@@ -99,10 +84,6 @@ def delete_all_rules(rules):
 
 # SET CURRENT STREAM RULES
 def set_rules():
-    # config = Config.get_config()
-    # my_rules = config.get_rules()
-    # tags = config.get_tags()
-
     # TODO: Determine whether we need get access modifiers or if we can
     # just use the direct attribute from the class
     # we should be able to use the attribute directly if configured properly
@@ -120,16 +101,6 @@ def set_rules():
         rules.append(
             {"value": rule, "tag": tags[my_rules.index(rule)]})
     print(("ADDED RULES USED:\n", rules))
-
-    # add more error handling for real-time rule adjustment gaps
-    # with open("utils/yamls/rules.yml", "r") as file:
-    #     axel_rules = yaml.load(file, Loader=yaml.FullLoader)
-
-    # print("RULES SAVED TO rules.yml")
-    # rules = rules + \
-    # [{"value": config["ADD_RULE"], "tag": config["ADD_TAG"]}, ]
-    # with open("utils/yamls/rules.yml", "w") as file:
-    #     file.write(str(axel_rules))
 
     # Reconnect stream if not active and set rules again
     response = requests.get(
@@ -219,6 +190,44 @@ def get_tweet_metrics(tweet_id):
                 response.status_code, response.text)
         )
     return response.json()
+
+# CALL USERS ENDPOINT FOR USERNAME OF TWEETER BY TWEET AUTHOR ID
+
+
+def get_username_by_author_id(author_id):
+    response = requests.get(
+        f"https://api.twitter.com/2/users/{author_id}",
+        auth=bearer_oauth
+    )
+    if response.status_code != 200:
+        raise Exception(
+            "Cannot get user data (HTTP {}): {}".format(
+                response.status_code, response.text)
+        )
+    return response.json()
+
+
+def get_bio_url(author):
+    response = requests.get(
+        url=f"https://api.twitter.com/2/users/by/username/{author}?user.fields=description,url",
+        # f"https://api.twitter.com/2/users/{author_id}?user.fields=description,url",
+        auth=bearer_oauth
+    )
+    if response.status_code != 200:
+        raise Exception(
+            "Cannot get user data (HTTP {}): {}".format(
+                response.status_code, response.text)
+        )
+    data = response.json()["data"]
+    try:
+        desc = data["description"]
+    except KeyError:
+        desc = "None"
+    try:
+        urls = data["url"]
+    except KeyError:
+        urls = "None"
+    return desc, urls
 
 
 '''
@@ -358,7 +367,7 @@ If it isn't then use then revert to chatGPT-helpbot's method of updating the tab
 '''
 
 
-def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach, pfpUrl):
+def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach, pfpUrl, desc, url):
     config = Config.get_config(params)
     pfp_table_name = config.get_pfp_table_name()
     print("Updating PFP Tracked Table...")
@@ -376,7 +385,9 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
             "Impressions": [agg_impressions],
             "Rank": [rank],
             "Global_Reach": [global_reach],
-            "PFP_Url": [pfpUrl]
+            "PFP_Url": [pfpUrl],
+            "Description": [desc],
+            "Bio_Link": [url]
         })
         print("PFP Tracked Table Created: ", pfp_table)
         pfp_table.to_sql(pfp_table_name, engine,
@@ -427,7 +438,9 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
                 "Impressions": [agg_impressions],
                 "Rank": [rank],
                 "Global_Reach": [global_reach],
-                "PFP_Url": [pfpUrl]
+                "PFP_Url": [pfpUrl],
+                "Description": [desc],
+                "Bio_Link": [url]
             })
             pfp_table = pfp_table.append(new_row, ignore_index=True)
             pfp_table.to_sql(pfp_table_name, engine,
@@ -479,19 +492,22 @@ def create_metric_dataFrame(id, author_username, author_name, likes, retweets, r
 
 
 # def main():
-#     config = Config.get_config(params)
-#     # config = Config()
-#     # config = Config.get_config()
-#     # Config.set_add_rule("myRule", "accounts")
-#     # Config.update_rules()
-#     # Config.set_remove_rule("myRule")
-#     # Config.update_rules()
-#     # update_rules()
-#     config.get_config()
-#     config.set_add_rule("myRule", "accounts")
-#     config.update_rules()
-#     config.set_remove_rule("myRule")
-#     config.update_rules()
+#     desc, urls = get_bio_url("Epicurus33")
+#     print("Description: ", desc)
+#     print("URLs: ", urls)
+# #     config = Config.get_config(params)
+# #     # config = Config()
+# #     # config = Config.get_config()
+# #     # Config.set_add_rule("myRule", "accounts")
+# #     # Config.update_rules()
+# #     # Config.set_remove_rule("myRule")
+# #     # Config.update_rules()
+# #     # update_rules()
+# #     config.get_config()
+# #     config.set_add_rule("myRule", "accounts")
+# #     config.update_rules()
+# #     config.set_remove_rule("myRule")
+# #     config.update_rules()
 
 
 # main()
