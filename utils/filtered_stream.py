@@ -105,7 +105,7 @@ def get_stream():
         if response_line:
             print("\n\nGOT RESPONSE!")
             if config.update_flag == True:
-                print("UPDATING RULES")
+                # print("UPDATING RULES")
                 st.update_rules()
                 config.update_flag = False
 
@@ -139,16 +139,16 @@ def get_stream():
                             tweet_data["data"]["author_id"])
                         author_username = author["data"]["username"]
                         author_name = author["data"]["name"]
-                        print(
-                            f"\nAuthor ID: {author_id}, Author Name: {author_name}, \
-                                Author Username: {author_username}")
+                        # print(
+                        #     f"\nAuthor ID: {author_id}, Author Name: {author_name}, \
+                        #         Author Username: {author_username}")
                     else:
                         print("Author ID not found")
 
                 if "referenced_tweets" in tweet_data["data"]:
                     if tweet_data["data"]["referenced_tweets"]:
                         referenced = tweet_data["data"]["referenced_tweets"]
-                    print("\nReferenced Tweets: ", referenced)
+                    # print("\nReferenced Tweets: ", referenced)
 
                 if "tweets" in tweet_data["includes"]:
                     if tweet_data["includes"]["tweets"]:
@@ -166,7 +166,7 @@ def get_stream():
                 get_stream()
 
             _id = tweet_data["data"]["id"]
-            print("\nTweet_ID by tweet_data: ", _id)
+            # print("\nTweet_ID by tweet_data: ", _id)
             engagement_metrics = st.get_tweet_metrics(_id)
             tweet_favorite_count = int(engagement_metrics["favorite_count"])
             tweet_retweet_count = int(engagement_metrics["retweet_count"])
@@ -227,13 +227,13 @@ def get_stream():
                         except Exception as err:
                             print("ERROR ON GET USERNAME BY AUTHOR ID ", err)
 
-                    print("\nAUTHOR OF INCLUDED/PARENT TWEET DIFFERENT FROM AUTHOR")
-                    print("\nIncluded/Parent Likes: ", included_likes)
-                    print("\nIncluded/Parent Replies: ", included_replies)
-                    print("\nIncluded/Parent Retweets: ", included_retweets)
-                    print("\nIncluded/Parent Quotes: ", included_quote_count)
-                    print("\nIncluded/Parent Impressions: ",
-                          included_impressions)
+                    # print("\nAUTHOR OF INCLUDED/PARENT TWEET DIFFERENT FROM AUTHOR")
+                    # print("\nIncluded/Parent Likes: ", included_likes)
+                    # print("\nIncluded/Parent Replies: ", included_replies)
+                    # print("\nIncluded/Parent Retweets: ", included_retweets)
+                    # print("\nIncluded/Parent Quotes: ", included_quote_count)
+                    # print("\nIncluded/Parent Impressions: ",
+                    #       included_impressions)
                     export_include_df = df
 
                 for iter in range(len(included_users)):
@@ -245,8 +245,8 @@ def get_stream():
                     # use this if we only want to track the original author and the engager
                     # compare mentioned/included parent user id to original author id
                     if engager_id == author_id:
-                        print("\nTweet's Mentioned UserID: ", engager_id,
-                              "matches original author ID: ", author_id)
+                        # print("\nTweet's Mentioned UserID: ", engager_id,
+                        #       "matches original author ID: ", author_id)
                         # engager_name = engager_user["name"]
                         # engager_username = engager_user["username"]
                         # print("\nMatching Mentioned Author Name: ", engager_name)
@@ -260,8 +260,8 @@ def get_stream():
                                                         included_replies, included_impressions, tag)
 
                     if engager_id == included_author_id:
-                        print("\nTweet's Mentioned UserID: ", engager_id,
-                              "matches included/parent author ID: ", included_author_id)
+                        # print("\nTweet's Mentioned UserID: ", engager_id,
+                        #       "matches included/parent author ID: ", included_author_id)
                         # engager_name = engager_user["name"]
                         # engager_username = engager_user["username"]
                         # print("\nMatching Included/Parent Author Name: ",
@@ -300,10 +300,10 @@ def get_stream():
                         st.update_tweets_table(engine, included_id, tweets_df, included_likes,
                                                included_retweets, included_replies, included_impressions)
                     else:
-                        print("Appending to Metrics table...")
+                        # print("Appending to Metrics table...")
                         export_include_df.to_sql(
                             tweetsTable, engine, if_exists="append")
-                        print("New user in Metrics Table appended")
+                        # print("New user in Metrics Table appended")
 
                 # read the table post changes
                 tweets_df = pd.read_sql_table(tweetsTable, engine)
@@ -312,7 +312,7 @@ def get_stream():
                 users_df = pd.read_sql_table(usersTable, engine)
 
                 if users_df.empty:
-                    print("Users table exists but is empty. Appending data...")
+                    # print("Users table exists but is empty. Appending data...")
                     export_users_df = pd.DataFrame(index=[included_author_username],
                                                    data=[[included_author_username, included_author_name,
                                                           included_likes, included_retweets, included_replies,
@@ -321,7 +321,7 @@ def get_stream():
                                                             "Retweets", "Replies", "Impressions"])
                     export_users_df.to_sql(
                         usersTable, engine, if_exists="append", index=False)
-                    print("Data appended to table")
+                    # print("Data appended to table")
 
                 # if user is already being tracked, update the values in our aggregated table
                 if included_author_username in users_df["index"].values:
@@ -329,7 +329,7 @@ def get_stream():
                         engine, included_author_username, users_df, tweets_df)
                 else:
                     # FIXED AUTHOR AND USERNAME NOT MATCHING FROM ROW 32 ON IN USERS_TABLE UNTIL RESET
-                    print("Appending to users table...")
+                    # print("Appending to users table...")
                     export_users_df = pd.DataFrame(index=[included_author_username],
                                                    data=[[included_author_username, included_author_name,
                                                           included_likes, included_retweets, included_replies,
@@ -338,14 +338,14 @@ def get_stream():
                                                             "Retweets", "Replies", "Impressions"])
                     export_users_df.to_sql(
                         usersTable, engine, if_exists="append", index=False)
-                    print(
-                        f"New user {included_author_name} in Users table appended (fs comment)")
+                    # print(
+                    #     f"New user {included_author_name} in Users table appended (fs comment)")
                     # print("DF Users Table: ", users_df)
                     if users_df.empty == True:
-                        print("Users table is empty, appending...")
+                        # print("Users table is empty, appending...")
                         export_users_df.to_sql(
                             usersTable, engine, if_exists="append")
-                        print("Table appended")
+                        # print("Table appended")
 
                 # if user is already being tracked, add them to the users table
                 members_df = nft.get_db_members_collections_stats(
@@ -378,8 +378,8 @@ def get_stream():
                         retweets = 0
                         replies = 0
                         impressions = 0
-                        print(
-                            f"stuck in except of user in wearing_list loop with error {e}")
+                        # print(
+                        #     f"stuck in except of user in wearing_list loop with error {e}")
 
                     if user in users_df["Name"].values:
                         # print("USER NAME ENDPOINT RESPONSE: ", response.json())
@@ -400,8 +400,8 @@ def get_stream():
                         except Exception as e:
                             username = users_df.loc[users_df["Name"]
                                                     == user, "index"].values[0]
-                            print(
-                                "stuck in except of user in users_df loop with error ", e)
+                            # print(
+                            #     "stuck in except of user in users_df loop with error ", e)
                             # this could be the engager so we need to handle this better in the case the api doesnt return data
                             # OR we need to preserve the included_author_username in the users table
                             # instead of the engager as the index and propogate that change throughout the code
@@ -420,7 +420,7 @@ def get_stream():
                         #                                == user, "Global_Reach"].values[0]
 
                         if likes < agg_likes or retweets < agg_retweets or replies < agg_replies or impressions < agg_impressions:
-                            print("Updating PFP table...")
+                            # print("Updating PFP table...")
                             st.update_pfp_tracked_table(
                                 engine, pfp_df, user, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach, pfpUrl
                             )
@@ -444,17 +444,19 @@ def get_stream():
                         print(
                             f"User {user} appended to PFP table (fs comment)\
                                 \nWaiting for next loop...")
-                if wearing_list != []:
-                    print("PFP DF UPDATED: ", pfp_df)
+                # if wearing_list != []:
+                #     print("PFP DF UPDATED: ", pfp_df)
 
 
 def main():
-    rules = st.get_rules()
-    st.delete_all_rules(rules)
+    # rules = st.get_rules()
+    st.delete_all_rules(st.get_rules())
     config = Config.get_config(params)
     config.set_add_rule("y00ts", "y00ts")
     config.update_rules()
     config.set_add_rule("DeGods", "degods")
+    config.update_rules()
+    config.set_add_rule("axelofwar", "y00ts")
     config.update_rules()
     ''' Example of adding a rule for a collection -
      edit this through ssh to add more collections'''
