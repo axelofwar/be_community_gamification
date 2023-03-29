@@ -133,6 +133,7 @@ def get_collection_members(engine, collection, usersTable):
                 "Time With Collection": [member_time_with_collection],
             }
         )
+        # TODO: overwrite y00ts in table to use the correct pfp instead of a degod
 
         if member_name in names:
             # print(
@@ -146,13 +147,13 @@ def get_collection_members(engine, collection, usersTable):
 
 
 def get_db_members_collections_stats(engine, collections, usersTable):
-    print("Collections :", collections, "\n")
+    # print("Collections :", collections, "\n")
     m_tot_df = pd.DataFrame()
     for collection in collections:
         sleep(0.25)
         m_df = get_collection_members(engine, collection, usersTable)
         m_tot_df = pd.concat([m_tot_df, m_df])
-        print("Collection :", collection, "iterated and completed...\n")
+        # print("Collection :", collection, "iterated and completed...\n")
     # print(m_tot_df)
     return m_tot_df
 
@@ -161,7 +162,7 @@ def get_wearing_list(members_df):
     wearing_list, rank_list, global_reach_list, pfpUrl_list = [], [], [], []
     _iter = 0
 
-    print("MEMBERS DF: ", members_df, "\n")
+    # print("MEMBERS DF: ", members_df, "\n")
 
     for member in members_df["Name"].values:
         # print(f "Member {member} Wearing PFP :", bool(members_df["Wearing PFP"].values[iter]),
