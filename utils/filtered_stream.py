@@ -95,10 +95,10 @@ def get_stream():
             print("Reconnecting to the stream...")
             config.recount += 1
             st.set_rules(st.delete_all_rules(st.get_rules()))
-        except:
+        except Exception as e:
             raise Exception(
-                "Cannot get stream (HTTP {}): {}".format(
-                    response.status_code, response.text
+                "Cannot get stream (HTTP {}): {}: {}".format(
+                    response.status_code, response.text, e
                 )
             )
     for response_line in response.iter_lines():
@@ -111,7 +111,7 @@ def get_stream():
 
             json_response = json.loads(response_line)
 
-            id = json_response["data"]["id"]
+            _id = json_response["data"]["id"]
             matching_rules = json_response["matching_rules"]
             tag = matching_rules[0]["tag"]
             full_text = json_response["data"]["text"]
@@ -126,8 +126,8 @@ def get_stream():
             # aggregate (x/y)*engagement to original author
             # aggregate (x/x)*engagement to quote/retweeter
 
-            print("\nTweet_ID: ", id)
-            tweet_data = st.get_data_by_id(id)
+            print("\nTweet_ID: ", _id)
+            tweet_data = st.get_data_by_id(_id)
 
             # improve wait/sleep to make sure rules GET call has returned json respones
             # once this is done, remove the nested if and try checks
@@ -165,9 +165,9 @@ def get_stream():
                 print("Restarting stream...")
                 get_stream()
 
-            id = tweet_data["data"]["id"]
-            print("\nTweet_ID by tweet_data: ", id)
-            engagement_metrics = st.get_tweet_metrics(id)
+            _id = tweet_data["data"]["id"]
+            print("\nTweet_ID by tweet_data: ", _id)
+            engagement_metrics = st.get_tweet_metrics(_id)
             tweet_favorite_count = int(engagement_metrics["favorite_count"])
             tweet_retweet_count = int(engagement_metrics["retweet_count"])
             # print(
@@ -450,7 +450,7 @@ def get_stream():
 
 def main():
     rules = st.get_rules()
-    delete = st.delete_all_rules(rules)
+    st.delete_all_rules(rules)
     config = Config.get_config(params)
     config.set_add_rule("y00ts", "y00ts")
     config.update_rules()
@@ -460,7 +460,7 @@ def main():
      edit this through ssh to add more collections'''
     # config.set_add_rule("CryptoPunks", "cryptopunks")
     # config.update_rules()
-    set = st.set_rules()
+    st.set_rules()
     get_stream()
 
 

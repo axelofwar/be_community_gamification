@@ -133,6 +133,7 @@ def get_collection_members(engine, collection, usersTable):
                 "Time With Collection": [member_time_with_collection],
             }
         )
+        # TODO: overwrite y00ts in table to use the correct pfp instead of a degod
 
         if member_name in names:
             # print(
