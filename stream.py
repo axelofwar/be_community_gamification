@@ -143,8 +143,12 @@ def get_stream():
             #         # print("Dude is wearing PFP: ", dude)
             #         thisUrl, thisMetadta = st.get_profile_picture_metadata(
             #             totals["Username"][totals["Name"] == dude].values[0])
+
+            #         with open("outputs/pfp_metadata.txt", "a") as f:
+            #             f.write(
+            #                 f"{dude} is wearing NFT with metadata: {thisMetadta}\n")
             #         print(
-            #             f"User {dude} is wearing NFT with metadata: {thisMetadta}")
+            #             f"User {dude} is wearing NFT {thisUrl}with metadata: {thisMetadta}\n")
 
             wearing_list, usernames, rank_list, global_reach_list, pfpUrl_list = nft.get_wearing_list(
                 totals)

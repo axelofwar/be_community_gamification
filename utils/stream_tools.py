@@ -438,10 +438,10 @@ If it isn't then use then revert to chatGPT-helpbot's method of updating the tab
 
 def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach, pfpUrl, desc, url):
     config = Config.get_config(params)
-    pfp_table_name = config.get_pfp_table_name()
+    # pfp_table_name = config.get_pfp_table_name() # temp commented out
     print("Updating PFP Tracked Table...")
     # check if the user is already in the table
-    pfp_table_name = params.new_pfp_table_name  # temp
+    pfp_table_name = config.new_pfp_table_name  # temp added
     pfp_table = pd.read_sql_table(pfp_table_name, engine)
 
     if pfp_table.empty:
