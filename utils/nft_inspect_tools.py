@@ -82,6 +82,68 @@ def get_simple_members(collection):
     return members
 
 
+def get_members(engine, collection, usersTable):
+    response = requests.get(
+        f"https://www.nftinspect.xyz/api/collections/members/{collection}?limit=7500&onlyNewMembers=false"
+    )
+    if response.status_code != 200:
+        raise Exception(
+            "Cannot get user data (HTTP {}): {}".format(
+                response.status_code, response.text)
+        )
+
+    output = response.json()
+    members = output["members"]
+
+    members_data_frame = pd.DataFrame(
+        {
+            "Name": [],
+            "Username": [],
+            "Wearing PFP": [],
+            "PFP URL": [],
+            "Global_Reach": [],
+            "Rank": [],
+            "Time With Token": [],
+            "Time With Collection": [],
+        }
+    )
+
+    names = []
+    users_df = pd.read_sql_table(usersTable, engine)
+    for name in users_df["Name"]:
+        names.append(name)
+
+    for member in members:
+        member_name = member["name"]
+        member_username = member["username"]
+        member_wearing_pfp = member["isWearingCollectionsPfp"]
+        member_pfp_url = member["pfpUrl"]
+        member_global_reach = member["globalReach"]
+        member_rank = member["rank"]
+        member_time_with_token = member["timeWithToken"]
+        member_time_with_collection = member["timeWithCollection"]
+
+        member_data_frame = pd.DataFrame(
+            {
+                "Name": [member_name],
+                "Username": [member_username],
+                "Wearing PFP": [member_wearing_pfp],
+                "PFP URL": [member_pfp_url],
+                "Global_Reach": [member_global_reach],
+                "Rank": [member_rank],
+                "Time With Token": [member_time_with_token],
+                "Time With Collection": [member_time_with_collection],
+            }
+        )
+
+        members_data_frame = pd.concat(
+            [members_data_frame, member_data_frame])
+
+    # print(f"{collection} data frame: \n", members_data_frame, "\n")
+
+    return members_data_frame
+
+
 def get_collection_members(engine, collection, usersTable):
     response = requests.get(
         f"https://www.nftinspect.xyz/api/collections/members/{collection}?limit=7500&onlyNewMembers=false"
@@ -106,7 +168,6 @@ def get_collection_members(engine, collection, usersTable):
             "Rank": [],
             "Time With Token": [],
             "Time With Collection": [],
-            "PFP Url": [],
         }
     )
 
@@ -167,8 +228,9 @@ def get_wearing_list(members_df):
     _iter = 0
 
     # print("MEMBERS DF: ", members_df, "\n")
-
     for member in members_df["Name"].values:
+        # print("Member :", member, "\n")
+        # print("Wearing PFP :", members_df["Wearing PFP"].values[_iter], "\n")
         # print(f "Member {member} Wearing PFP :", bool(members_df["Wearing PFP"].values[iter]),
         #   "\n")
         if members_df["Wearing PFP"].values[_iter] > 0:

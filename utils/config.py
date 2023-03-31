@@ -23,7 +23,7 @@ if 'GITHUB_ACTION' not in os.environ:
 #         self.update_flag = False
 class Config:
 
-    def __init__(self, add_rule="", add_tag="", remove_rule="", remove_tag="", account_to_query="", collections=[], rules=[], tags=[], db_name="community_gamification", metrics_table_name="metrics_table", pfp_table_name="pfp_table", aggregated_table_name="users_table", recount=0, leaderboard_endpoint="leaderboard", database_host="be-community-gamification.onrender.com/api/", update_flag=False, timeout=10):
+    def __init__(self, add_rule="", add_tag="", remove_rule="", remove_tag="", account_to_query="", collections=[], rules=[], tags=[], db_name="community_gamification", metrics_table_name="metrics_table", pfp_table_name="pfp_table", new_pfp_table_name="leaderboard", aggregated_table_name="users_table", recount=0, leaderboard_endpoint="leaderboard", database_host="be-community-gamification.onrender.com/api/", update_flag=False, timeout=10, history=30):
         self.add_rule = add_rule
         self.add_tag = add_tag
         self.remove_rule = remove_rule
@@ -35,12 +35,14 @@ class Config:
         self.db_name = db_name
         self.metrics_table_name = metrics_table_name
         self.pfp_table_name = pfp_table_name
+        self.new_pfp_table_name = new_pfp_table_name
         self.aggregated_table_name = aggregated_table_name
         self.recount = recount
         self.leaderboard_endpoint = leaderboard_endpoint
         self.database_host = database_host
         self.update_flag = update_flag
         self.timeout = timeout
+        self.history = history
 
     def get_config(self):
         return self
