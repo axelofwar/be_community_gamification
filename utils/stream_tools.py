@@ -274,6 +274,31 @@ def get_bio_url(author):
     return desc, urls
 
 
+def get_profile_picture_metadata(username):
+    response = requests.get(
+        url=f"https://api.twitter.com/2/users/by/username/{username}?user.fields=profile_image_url",
+        auth=bearer_oauth
+    )
+    if response.status_code != 200:
+        raise Exception(
+            "Cannot get user data (HTTP {}): {}".format(
+                response.status_code, response.text)
+        )
+    data = response.json()["data"]
+    try:
+        profile_image_url = data["profile_image_url"]
+    except KeyError:
+        profile_image_url = "None"
+
+    response = requests.head(profile_image_url)
+    if response.status_code != 200:
+        raise Exception(
+            "Cannot get user data (HTTP {}): {}".format(
+                response.status_code, response.text)
+        )
+    return profile_image_url, response.headers
+
+
 '''
 TODO: Confirm that the update_aggregated_metrics function is
 working as intended. It should only update rows that have changed
@@ -537,6 +562,10 @@ def create_metric_dataFrame(id, author_username, author_name, likes, retweets, r
 
 
 # def main():
+#     user = "axelofwar"
+#     url, metadata = get_profile_picture_metadata(user)
+#     print("URL: ", url)
+#     print("Metadata: ", metadata)
 #     metrics = get_user_metrics_by_days("1434237661728882694", 7)
 #     print("Metrics: ", metrics)
 

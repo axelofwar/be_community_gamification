@@ -137,6 +137,15 @@ def get_stream():
                 total_members = nft.get_members(engine, collection, usersTable)
                 totals = pd.concat([totals, total_members])
 
+            # see all the dudes in nft inspect datatbase wearing pfps and the metadata of the twitter image
+            # for dude in totals["Name"]:
+            #     if totals["Wearing PFP"][totals["Name"] == dude].values[0] == True:
+            #         # print("Dude is wearing PFP: ", dude)
+            #         thisUrl, thisMetadta = st.get_profile_picture_metadata(
+            #             totals["Username"][totals["Name"] == dude].values[0])
+            #         print(
+            #             f"User {dude} is wearing NFT with metadata: {thisMetadta}")
+
             wearing_list, usernames, rank_list, global_reach_list, pfpUrl_list = nft.get_wearing_list(
                 totals)
 
@@ -149,24 +158,24 @@ def get_stream():
             if tweet_data["includes"]:
                 print("Users: ", tweet_data["includes"]["users"])
                 for user in tweet_data["includes"]["users"]:
-                    print("Author: ", user)
-                    # print("Author Username: ", user["username"])
-                    # print("Author ID: ", user["id"])
+                    # print("Author: ", user)
                     name = user["name"]
                     username = user["username"]
                     if user["name"] in wearing_list:
+                        pfpurl, metadata = st.get_profile_picture_metadata(
+                            username)
                         print(
-                            f"User {name}, username {username} is wearing NFT")
+                            f"User {name}, username {username} is wearing NFT with metadata: {metadata}")
                     if username in usernames and name in wearing_list:
                         rank = rank_list[usernames.index(username)]
                         global_reach = global_reach_list[usernames.index(
                             username)]
-                        pfpUrl = pfpUrl_list[usernames.index(username)]
+                        pfp_url = pfpUrl_list[usernames.index(username)]
                         metrics = st.get_user_metrics_by_days(
                             user["id"], params.history)
                         description, url = st.get_bio_url(username)
                         member_data = pd.DataFrame(
-                            [[username, user["name"], metrics["likes"], metrics["retweets"], metrics["replies"], metrics["impressions"], rank, global_reach, pfpUrl, description, url]])
+                            [[username, user["name"], metrics["likes"], metrics["retweets"], metrics["replies"], metrics["impressions"], rank, global_reach, pfp_url, description, url]])
                         member_data.columns = [
                             "index", "Name", "Favorites", "Retweets", "Replies", "Impressions", "Rank", "Global_Reach", "PFP_Url", "Description", "Bio_Link"]
 
@@ -184,6 +193,12 @@ def get_stream():
 
                 print("Holders: ", memebers["Name"].values.tolist())
                 print("Non Holders: ", non_holders)
+
+                '''
+                TODO:
+                - determine why frank and y00ts are not in the list of holders
+                - determine if we can get pfp metadata without nft inspect
+                '''
 
 
 def main():
