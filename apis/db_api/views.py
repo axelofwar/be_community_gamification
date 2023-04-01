@@ -43,7 +43,7 @@ class pfpTable(APIView):
         if cached_data:
             return Response(cached_data, status=status.HTTP_200_OK)
         else:
-            queryset = Tweet.objects.all().order_by('-Impressions')
+            queryset = Tweet.objects.all().order_by('-Global_Reach')
             serializer = TweetSerializer(queryset, many=True)
             cache.set(cache_key, serializer.data, 60)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -54,7 +54,7 @@ class adminPfpTable(APIView):
     # throttle_classes = [throttle.CustomThrottle]
 
     def get(self, request, format=None):
-        queryset = Tweet.objects.all().order_by('-Impressions')
+        queryset = Tweet.objects.all().order_by('-Global_Reach')
         serializer = TweetSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
