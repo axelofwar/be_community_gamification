@@ -140,6 +140,7 @@ def get_stream():
             # see all the dudes in nft inspect datatbase wearing pfps and the metadata of the twitter image
             # for dude in totals["Name"]:
             #     if totals["Wearing PFP"][totals["Name"] == dude].values[0] == True:
+            #         time.sleep(5)
             #         # print("Dude is wearing PFP: ", dude)
             #         thisUrl, thisMetadta = st.get_profile_picture_metadata(
             #             totals["Username"][totals["Name"] == dude].values[0])
@@ -159,17 +160,17 @@ def get_stream():
                          "Rank", "Global_Reach", "PFP_URL", "Description", "Bio_Link"]
             )
 
-            if tweet_data["includes"]:
+            if tweet_data["includes"] and "tweets" in tweet_data["includes"]:
                 print("Users: ", tweet_data["includes"]["users"])
                 for user in tweet_data["includes"]["users"]:
                     # print("Author: ", user)
                     name = user["name"]
                     username = user["username"]
-                    if user["name"] in wearing_list:
-                        pfpurl, metadata = st.get_profile_picture_metadata(
-                            username)
-                        print(
-                            f"User {name}, username {username} is wearing NFT with metadata: {metadata}")
+                    # if user["name"] in wearing_list:
+                    # pfpurl, metadata = st.get_profile_picture_metadata(
+                    #     username)
+                    # print(
+                    #     f"User {name}, username {username} is wearing NFT with metadata: {metadata}")
                     if username in usernames and name in wearing_list:
                         rank = rank_list[usernames.index(username)]
                         global_reach = global_reach_list[usernames.index(
@@ -187,13 +188,24 @@ def get_stream():
                         print("Calling update pfp tracked table...")
                         st.update_pfp_tracked_table(
                             engine, pfp_table, user["name"], username, metrics["likes"], metrics["retweets"], metrics[
-                                "replies"], metrics["impressions"], rank, global_reach, pfpUrl, description, url
+                                "replies"], metrics["impressions"], rank, global_reach, pfp_url, description, url
                         )
                         # print("Member Data: ", member_data)
                         memebers = pd.concat([memebers, member_data])
                     else:
                         print("Updating non holders...")
                         non_holders.append(user["username"])
+                        pfp_table = pd.read_sql_table(newpfpTable, engine)
+                        if user["name"] in pfp_table["Name"].values:
+                            # remove from pfp table
+                            print(
+                                "No longer wearing PFP - Removing from pfp table...")
+                            pfp_table = pfp_table[pfp_table["Name"]
+                                                  != user["name"]]
+                            pfp_table.to_sql(
+                                newpfpTable, engine, if_exists="replace")
+                        else:
+                            print("Not in pfp table, skipping...")
 
                 print("Holders: ", memebers["Name"].values.tolist())
                 print("Non Holders: ", non_holders)
@@ -202,6 +214,7 @@ def get_stream():
                 TODO:
                 - determine why frank and y00ts are not in the list of holders
                 - determine if we can get pfp metadata without nft inspect
+                - determine why y00ts have the wrong pfp
                 '''
 
 
@@ -210,10 +223,10 @@ def main():
     st.delete_all_rules(st.get_rules())
     config = Config.get_config(params)
     config.history = 30  # number of days to track back tweet metrics
-    config.set_add_rule("y00ts", "y00ts")
+    config.set_add_rule(["y00ts", "DeGods"], ["y00ts", "degods"])
     config.update_rules()
-    config.set_add_rule("DeGods", "degods")
-    config.update_rules()
+    # config.set_add_rule("DeGods", "degods")
+    # config.update_rules()
     ''' Example of adding a rule for a collection -
      edit this through ssh to add more collections'''
     # config.set_add_rule("CryptoPunks", "cryptopunks")

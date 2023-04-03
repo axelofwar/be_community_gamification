@@ -89,13 +89,11 @@ def set_rules():
     # just use the direct attribute from the class
     # we should be able to use the attribute directly if configured properly
     config = Config.get_config(params)
-    my_rules = config.rules
-    tags = config.tags
-    rules = []
+    rules, my_rules = [], []
 
     if params.update_flag == True:
-        my_rules.append(config.add_rule)
-        tags.append(config.add_tag)
+        my_rules = config.rules
+        tags = config.tags
         params.update_flag = False
 
     for rule in my_rules:
@@ -128,7 +126,7 @@ def set_rules():
     config.update_flag = False
 
 
-# UPDATE CURRENT STREAM RULES
+# UPDATE CURRENT STREAM RULES - read config and call set rules w/ values
 def update_rules():
     config = Config.get_config(params)
 
@@ -494,6 +492,13 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
             if user_row["Global_Reach"] is None or global_reach > user_row["Global_Reach"]:
                 updates["Global_Reach"] = global_reach if user_row["Global_Reach"] is None else max(
                     global_reach, user_row["Global_Reach"])
+            # hard set these each time as they are harder to compare than values
+            if user_row["PFP_Url"] is None or pfpUrl != user_row["PFP_Url"]:
+                updates["PFP_Url"] = pfpUrl
+            if user_row["Description"] is None or desc != user_row["Description"]:
+                updates["Description"] = desc
+            if user_row["Bio_Link"] is None or url != user_row["Bio_Link"]:
+                updates["Bio_Link"] = url
 
             if updates:
                 pfp_table.loc[user_index, updates.keys()] = updates.values()

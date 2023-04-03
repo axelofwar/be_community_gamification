@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 import yaml
+from ...utils.stream_tools import params
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
@@ -36,10 +37,13 @@ POSTGRES_PORT = os.getenv("RENDER_PORT")  # render database
 
 DJANGO_SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
-with open("../utils/yamls/config.yml", "r") as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
+# with open("../utils/yamls/config.yml", "r") as f:
+#     config = yaml.load(f, Loader=yaml.FullLoader)
 
-db_name = config["db_name"]
+# db_name = config["db_name"]
+
+config = params.get_config()
+db_name = config.db_name
 
 
 # Quick-start development settings - unsuitable for production
@@ -67,6 +71,8 @@ INSTALLED_APPS = [
     'db_api',
     'corsheaders',
     'django_redis',
+    'channels',
+    'channels_redis',
 ]
 
 MIDDLEWARE = [
@@ -179,3 +185,20 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+ASGI_APPLICATION = 'api.routing.application'
+CHANNEL_LAYERS = {
+    'BACKEND': 'channels_redis.core.RedisChannelLayer',
+    # 'CONFIG': {
+    #     'hosts': [('localhost', 6379)],
+    # },
+    # "default": {
+    #     "BACKEND": "channels.layers.InMemoryChannelLayer"
+    # }
+    "default": {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('red-cgl4c5u4dad69r5ov8b0', 6379)],
+        },
+    },
+}

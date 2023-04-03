@@ -9,3 +9,6 @@ This file is used to configure the app, and is automatically generated when the 
 class DbApiConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'db_api'
+
+    def ready(self):
+        import db_api.signals  # import the signals module
