@@ -1,5 +1,5 @@
 from django.urls import path
-from db_api.views import pfpTable, adminPfpTable, Index  # , UpdateRule, RemoveRule
+from db_api.views import pfpTable, adminPfpTable, Index, UpdateRule, RemoveRule
 
 app_name = 'db_api'
 
