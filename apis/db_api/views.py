@@ -137,6 +137,10 @@ class UpdateRule(APIView):
                     return Response({'message': 'Error: ' + str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
                 try:
+                    print("RULE: ", request.POST.get('rule'))
+                    print("TAG: ", request.POST.get('tag'))
+                    rule = request.POST.get('rule')
+                    tag = request.POST.get('tag')
                     config.add_rule = rule
                     config.add_tag = tag
 
@@ -168,7 +172,7 @@ class RemoveRule(APIView):
                 data = string.replace("b'", "")
             data = json.dumps(data)
         try:
-            config.remove_rule = data
+            config.remove_rule = request.POST.get('rule')
 
             # call function from utils to remove rule
             rr.main()

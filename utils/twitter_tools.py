@@ -1,5 +1,5 @@
 import os
-import tweepy
+# import tweepy
 import yaml
 import sys
 
@@ -21,14 +21,14 @@ params = st.params
 
 
 # INITIALIZE TWITTER API
-async def init_twitter():
-    auth = tweepy.OAuthHandler(
-        os.environ("TWITTER_API_KEY"), os.environ("TWITTER_API_SECRET_KEY"))
-    auth.set_access_token(os.environ("TWITTER_ACCESS_TOKEN"),
-                          os.environ("TWITTER_ACCESS_TOKEN_SECRET"))
-    api = tweepy.API(auth)
-    print("TWITTER API INITIALIZED")
-    return api
+# async def init_twitter():
+#     auth = tweepy.OAuthHandler(
+#         os.environ("TWITTER_API_KEY"), os.environ("TWITTER_API_SECRET_KEY"))
+#     auth.set_access_token(os.environ("TWITTER_ACCESS_TOKEN"),
+#                           os.environ("TWITTER_ACCESS_TOKEN_SECRET"))
+#     api = tweepy.API(auth)
+#     print("TWITTER API INITIALIZED")
+#     return api
 
 
 # GET TWEET HISTORY BY ACCOUNT FOR DAYS SPECIFIED IN CONFIG
