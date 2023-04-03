@@ -3,6 +3,7 @@ import os
 import requests
 import pandas as pd
 import sys
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 if 'GITHUB_ACTION' not in os.environ:
@@ -88,13 +89,11 @@ def set_rules():
     # just use the direct attribute from the class
     # we should be able to use the attribute directly if configured properly
     config = Config.get_config(params)
-    my_rules = config.rules
-    tags = config.tags
-    rules = []
+    rules, my_rules = [], []
 
     if params.update_flag == True:
-        my_rules.append(config.add_rule)
-        tags.append(config.add_tag)
+        my_rules = config.rules
+        tags = config.tags
         params.update_flag = False
 
     for rule in my_rules:
@@ -127,7 +126,7 @@ def set_rules():
     config.update_flag = False
 
 
-# UPDATE CURRENT STREAM RULES
+# UPDATE CURRENT STREAM RULES - read config and call set rules w/ values
 def update_rules():
     config = Config.get_config(params)
 
@@ -207,6 +206,49 @@ def get_username_by_author_id(author_id):
     return response.json()
 
 
+def get_user_metrics_by_days(user_id, days):
+
+    aggregated_likes, aggregated_retweets, aggregated_replies, aggregated_impressions = 0, 0, 0, 0
+
+    end_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    start_date = (datetime.utcnow() - timedelta(days=days)
+                  ).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    url = f"https://api.twitter.com/2/users/{user_id}/tweets?max_results=100&tweet.fields=public_metrics&start_time={start_date}&end_time={end_date}"
+
+    try:
+        response = requests.get(
+            url, headers={"Authorization": f"Bearer {bearer_token}"})
+
+        if response.status_code != 200:
+            raise Exception(
+                f"Failed to get user metrics (HTTP {response.status_code}): {response.text}")
+    except Exception as e:
+        print(e)
+    # Parse the response JSON
+    data = response.json()
+    for tweet in data["data"]:
+        aggregated_likes += tweet["public_metrics"]["like_count"]
+        aggregated_retweets += tweet["public_metrics"]["retweet_count"]
+        aggregated_replies += tweet["public_metrics"]["reply_count"]
+        aggregated_impressions += tweet["public_metrics"]["impression_count"]
+
+        data = {
+            "likes": aggregated_likes,
+            "retweets": aggregated_retweets,
+            "replies": aggregated_replies,
+            "impressions": aggregated_impressions
+        }
+
+    # # Aggregate the metrics for all tweets
+    # metrics = {"likes": 0, "retweets": 0, "replies": 0, "impressions": 0}
+    # for tweet in data["data"]:
+    #     for key in metrics.keys():
+    #         metrics[key] += tweet["public_metrics"][key]
+
+    return data
+
+
 def get_bio_url(author):
     response = requests.get(
         url=f"https://api.twitter.com/2/users/by/username/{author}?user.fields=description,url",
@@ -228,6 +270,31 @@ def get_bio_url(author):
     except KeyError:
         urls = "None"
     return desc, urls
+
+
+def get_profile_picture_metadata(username):
+    response = requests.get(
+        url=f"https://api.twitter.com/2/users/by/username/{username}?user.fields=profile_image_url",
+        auth=bearer_oauth
+    )
+    if response.status_code != 200:
+        raise Exception(
+            "Cannot get user data (HTTP {}): {}".format(
+                response.status_code, response.text)
+        )
+    data = response.json()["data"]
+    try:
+        profile_image_url = data["profile_image_url"]
+    except KeyError:
+        profile_image_url = "None"
+
+    response = requests.head(profile_image_url)
+    if response.status_code != 200:
+        raise Exception(
+            "Cannot get user data (HTTP {}): {}".format(
+                response.status_code, response.text)
+        )
+    return profile_image_url, response.headers
 
 
 '''
@@ -369,9 +436,10 @@ If it isn't then use then revert to chatGPT-helpbot's method of updating the tab
 
 def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, rank, global_reach, pfpUrl, desc, url):
     config = Config.get_config(params)
-    pfp_table_name = config.get_pfp_table_name()
+    # pfp_table_name = config.get_pfp_table_name() # temp commented out
     print("Updating PFP Tracked Table...")
     # check if the user is already in the table
+    pfp_table_name = config.new_pfp_table_name  # temp added
     pfp_table = pd.read_sql_table(pfp_table_name, engine)
 
     if pfp_table.empty:
@@ -424,6 +492,13 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
             if user_row["Global_Reach"] is None or global_reach > user_row["Global_Reach"]:
                 updates["Global_Reach"] = global_reach if user_row["Global_Reach"] is None else max(
                     global_reach, user_row["Global_Reach"])
+            # hard set these each time as they are harder to compare than values
+            if user_row["PFP_Url"] is None or pfpUrl != user_row["PFP_Url"]:
+                updates["PFP_Url"] = pfpUrl
+            if user_row["Description"] is None or desc != user_row["Description"]:
+                updates["Description"] = desc
+            if user_row["Bio_Link"] is None or url != user_row["Bio_Link"]:
+                updates["Bio_Link"] = url
 
             if updates:
                 pfp_table.loc[user_index, updates.keys()] = updates.values()
@@ -445,7 +520,7 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
             pfp_table = pfp_table.append(new_row, ignore_index=True)
             pfp_table.to_sql(pfp_table_name, engine,
                              if_exists="replace", index=False)
-            print(f"User {username} added to PFP Tracked table")
+            print(f"User {username} added to {pfp_table_name}")
 
     return pfp_table
 
@@ -492,6 +567,16 @@ def create_metric_dataFrame(id, author_username, author_name, likes, retweets, r
 
 
 # def main():
+#     user = "axelofwar"
+#     url, metadata = get_profile_picture_metadata(user)
+#     print("URL: ", url)
+#     print("Metadata: ", metadata)
+#     metrics = get_user_metrics_by_days("1434237661728882694", 7)
+#     print("Metrics: ", metrics)
+
+#     '''
+#     Author ID: 1434237661728882694, Author Name: PixelRainbowNFT (aka 5h4gg0) 💀🍟, Author Username: PixelRainbowNFT
+#     '''
 #     desc, urls = get_bio_url("Epicurus33")
 #     print("Description: ", desc)
 #     print("URLs: ", urls)

@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 import yaml
+from api_utils import stream_tools as st
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
@@ -36,11 +37,12 @@ POSTGRES_PORT = os.getenv("RENDER_PORT")  # render database
 
 DJANGO_SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
-with open("../utils/yamls/config.yml", "r") as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
+# with open("../utils/yamls/config.yml", "r") as f:
+#     config = yaml.load(f, Loader=yaml.FullLoader)
 
-db_name = config["db_name"]
-
+# db_name = config["db_name"]
+params = st.params
+db_name = params.db_name
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -82,7 +84,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://fe-community-gamification.onrender.com/",
+    "https://fe-community-gamification.onrender.com",
 ]
 
 CACHES = {

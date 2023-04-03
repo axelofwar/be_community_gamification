@@ -130,11 +130,17 @@ def update_rules():
 def remove_rules():
     config = params.get_config()
 
-    if config.remove_rule == "":
+    if config.remove_rule == []:
         return None
     else:
-        config.rules.remove(params.remove_rule)
-        config.tags.remove(params.remove_tag)
+        for rule in config.remove_rule:
+            params.rules.remove(rule)
+        # for tag in config.remove_tag:
+        for tag in config.remove_tag:
+            params.tags.remove(tag)
+            params.collections.remove(tag)
+        # config.rules.remove(params.remove_rule)
+        # config.tags.remove(params.remove_tag)
         params.update_flag = True
         update_rules()
 

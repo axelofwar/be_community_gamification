@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import *
+from .models import Tweet
 
 '''
 A serializer is a class that converts a model instance into a Python native data type 

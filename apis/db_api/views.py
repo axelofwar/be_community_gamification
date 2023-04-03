@@ -23,7 +23,7 @@ params = st.params
 
 class Index(APIView):
     # throttle_classes = [throttle.CustomThrottle(100, 60)]
-    throttle_classes = [UserRateThrottle, AnonRateThrottle]
+    # throttle_classes = [UserRateThrottle, AnonRateThrottle]
 
     def get(self, request, format=None):
         content = {
