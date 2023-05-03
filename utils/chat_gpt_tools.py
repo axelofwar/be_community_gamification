@@ -30,7 +30,7 @@ if not openai.api_key:
 
 # CHAT GPT REPONSE CALL
 async def chatGPTcall(mPrompt, mModel, mTemp, mTokens):  # function for ChatGPT call
-    response = openai.ChatCompletion.create(
+    response = openai.Completion.create(
         model=mModel,
         prompt=mPrompt,
         # uniqueness modifiers
@@ -43,12 +43,12 @@ async def chatGPTcall(mPrompt, mModel, mTemp, mTokens):  # function for ChatGPT 
     return response
 
 
-def ask_GPT4(system_intel, prompt, model):
-    result = openai.ChatCompletion.create(model=model,
-                                          messages=[{"role": "system", "content": system_intel},
-                                                    {"role": "user", "content": prompt}])
-    display(Markdown(result['choices'][0]['message']['content']))
-    return result['choices'][0]['message']['content']
+# def ask_GPT4(system_intel, prompt, model):
+#     result = openai.ChatCompletion.create(model=model,
+#                                           messages=[{"role": "system", "content": system_intel},
+#                                                     {"role": "user", "content": prompt}])
+#     display(Markdown(result['choices'][0]['message']['content']))
+#     return result['choices'][0]['message']['content']
 
 # def gpt4_call(prompt, model="gpt-4-32k", max_tokens=5000, temperature=0.8, n=1):
 #     response = openai.Completion.create(
@@ -61,30 +61,30 @@ def ask_GPT4(system_intel, prompt, model):
 #     return response.choices[0].text.strip()
 
 
-async def main():
-    # image = cv2.imread("outputs/Frame_103_2.jpg")
-    # print("Models: ", openai.Engine.list())
-    with open("outputs/fe.txt", "r") as promptFile:
-        fe_txt = promptFile.read()
-        promptFile.close()
-    # model = "code-davinci-002"
-    prompt = f"modify thie code below to solve the error, show only the completed modified output and no step by step instructions: {fe_txt}"
-    # response = await chatGPTcall(prompt, model, params["temp"], 5000)
+# async def main():
+#     # image = cv2.imread("outputs/Frame_103_2.jpg")
+#     # print("Models: ", openai.Engine.list())
+#     with open("outputs/fe.txt", "r") as promptFile:
+#         fe_txt = promptFile.read()
+#         promptFile.close()
+#     # model = "code-davinci-002"
+#     prompt = f"modify thie code below to solve the error, show only the completed modified output and no step by step instructions: {fe_txt}"
+#     # response = await chatGPTcall(prompt, model, params["temp"], 5000)
 
-    # # print(response.choices[0].text)
-    # with open("outputs/chatGPT_response.txt", "w+") as chatGPTFile:
-    #     chatGPTFile.write(response.choices[0].text)
-    #     chatGPTFile.close()
+#     # # print(response.choices[0].text)
+#     # with open("outputs/chatGPT_response.txt", "w+") as chatGPTFile:
+#     #     chatGPTFile.write(response.choices[0].text)
+#     #     chatGPTFile.close()
 
-    system_intel = "You are GPT-4, answer my question as as a software developer and generate or modify the code appropriately. Assume that I know \
-    #     some basics about coding, and know a lot about python, but less about javascript and react."
-    # Call the function above
-    # model = "gpt-4-32k" "gpt-3.5-turbo-0301"
-    gpt4_response = ask_GPT4(system_intel, prompt, 'gpt-3.5-turbo-0301')
-    # gpt4_response = gpt4_call(prompt, model="gpt-4",
-    #                           max_tokens=5000, temperature=0.8, n=1)
-    with open("outputs/gpt4_response.txt", "w+") as gpt4File:
-        gpt4File.write(gpt4_response)
-        gpt4File.close()
+#     system_intel = "You are GPT-4, answer my question as as a software developer and generate or modify the code appropriately. Assume that I know \
+#     #     some basics about coding, and know a lot about python, but less about javascript and react."
+#     # Call the function above
+#     # model = "gpt-4-32k" "gpt-3.5-turbo-0301"
+#     gpt4_response = ask_GPT4(system_intel, prompt, 'gpt-3.5-turbo-0301')
+#     # gpt4_response = gpt4_call(prompt, model="gpt-4",
+#     #                           max_tokens=5000, temperature=0.8, n=1)
+#     with open("outputs/gpt4_response.txt", "w+") as gpt4File:
+#         gpt4File.write(gpt4_response)
+#         gpt4File.close()
 
-asyncio.run(main())
+# asyncio.run(main())

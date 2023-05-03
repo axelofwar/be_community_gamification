@@ -206,6 +206,58 @@ def get_username_by_author_id(author_id):
     return response.json()
 
 
+def get_twitter_user_info(username):
+    # Twitter API endpoint for user lookup
+    url = f'https://api.twitter.com/2/users/by/username/{username}'
+
+    try:
+        response = requests.get(
+            url, headers={"Authorization": f"Bearer {bearer_token}"})
+
+        if response.status_code != 200:
+            raise Exception(
+                f"Failed to get user metrics (HTTP {response.status_code}): {response.text}")
+    except Exception as e:
+        print(e)
+    # Print the response JSON data
+    # print(response.json())
+    return response.json()["data"]
+
+
+def get_user_metrics_start_end(user_id, start_date, end_date):
+
+    aggregated_likes, aggregated_retweets, aggregated_replies, aggregated_impressions = 0, 0, 0, 0
+
+    url = f"https://api.twitter.com/2/users/{user_id}/tweets?max_results=100&tweet.fields=public_metrics&start_time={start_date}&end_time={end_date}"
+
+    try:
+        response = requests.get(
+            url, headers={"Authorization": f"Bearer {bearer_token}"})
+
+        if response.status_code != 200:
+            raise Exception(
+                f"Failed to get user metrics (HTTP {response.status_code}): {response.text}")
+    except Exception as e:
+        print(e)
+
+    # Parse the response JSON
+    data = response.json()
+    for tweet in data["data"]:
+        aggregated_likes += tweet["public_metrics"]["like_count"]
+        aggregated_retweets += tweet["public_metrics"]["retweet_count"]
+        aggregated_replies += tweet["public_metrics"]["reply_count"]
+        aggregated_impressions += tweet["public_metrics"]["impression_count"]
+
+        data = {
+            "likes": aggregated_likes,
+            "retweets": aggregated_retweets,
+            "replies": aggregated_replies,
+            "impressions": aggregated_impressions
+        }
+
+    return data
+
+
 def get_user_metrics_by_days(user_id, days):
 
     aggregated_likes, aggregated_retweets, aggregated_replies, aggregated_impressions = 0, 0, 0, 0
@@ -213,6 +265,20 @@ def get_user_metrics_by_days(user_id, days):
     end_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     start_date = (datetime.utcnow() - timedelta(days=days)
                   ).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    # current_time = datetime.utcnow()
+
+    # if 'start_date' not in locals() or (current_time - datetime.fromisoformat(start_date)) >= timedelta(days=params.history):
+    #     start_date = (current_time - timedelta(days=params.history)
+    #                   ).strftime('%Y-%m-%dT%H:%M:%SZ')
+    #     end_date = (current_time + timedelta(days=1)
+    #                 ).strftime('%Y-%m-%dT%H:%M:%SZ')
+    # else:
+    #     end_date = (datetime.fromisoformat(end_date) +
+    #                 timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    print("START DATE: ", start_date)
+    print("END DATE: ", end_date)
 
     url = f"https://api.twitter.com/2/users/{user_id}/tweets?max_results=100&tweet.fields=public_metrics&start_time={start_date}&end_time={end_date}"
 
@@ -522,6 +588,86 @@ def update_pfp_tracked_table(engine, pfp_table, name, username, agg_likes, agg_r
                              if_exists="replace", index=False)
             print(f"User {username} added to {pfp_table_name}")
 
+    return pfp_table
+
+
+def update_engagement_table(engine, pfp_table, name, username, agg_likes, agg_retweets, agg_replies, agg_impressions, pfpUrl, desc, url):
+    config = Config.get_config(params)
+    # pfp_table_name = config.get_pfp_table_name() # temp commented out
+    print("Updating PFP Tracked Table...")
+    # check if the user is already in the table
+    pfp_table_name = "engagement_table"  # temp added
+    pfp_table = pd.read_sql_table(pfp_table_name, engine)
+
+    if pfp_table.empty:
+        print("PFP Tracked Table is empty")
+        pfp_table = pd.DataFrame({
+            "index": [username],
+            "Name": [name],
+            "Favorites": [agg_likes],
+            "Retweets": [agg_retweets],
+            "Replies": [agg_replies],
+            "Impressions": [agg_impressions],
+            "PFP_Url": [pfpUrl],
+            "Description": [desc],
+            "Bio_Link": [url]
+        })
+        print("PFP Tracked Table Created: ", pfp_table)
+        pfp_table.to_sql(pfp_table_name, engine,
+                         if_exists="replace", index=False)
+        print(f"User {name} added to PFP Tracked Table")
+    else:
+        user_exists = pfp_table["index"] == username
+        if user_exists.any():
+            user_index = user_exists.idxmax()
+            user_row = pfp_table.loc[user_index]
+            updates = {}
+
+            '''
+            check if the value is None, and if it is then assign
+            the value of the table. If it is None, compare the max of
+            the current value and the new value
+            '''
+
+            if user_row["Favorites"] is None or agg_likes > user_row["Favorites"]:
+                updates["Favorites"] = agg_likes if user_row["Favorites"] is None else max(
+                    agg_likes, user_row["Favorites"])
+            if user_row["Retweets"] is None or agg_retweets > user_row["Retweets"]:
+                updates["Retweets"] = agg_retweets if user_row["Retweets"] is None else max(
+                    agg_retweets, user_row["Retweets"])
+            if user_row["Replies"] is None or agg_replies > user_row["Replies"]:
+                updates["Replies"] = agg_replies if user_row["Replies"] is None else max(
+                    agg_replies, user_row["Replies"])
+            if user_row["Impressions"] is None or agg_impressions > user_row["Impressions"]:
+                updates["Impressions"] = agg_impressions if user_row["Impressions"] is None else max(
+                    agg_impressions, user_row["Impressions"])
+            # hard set these each time as they are harder to compare than values
+            if user_row["PFP_Url"] is None or pfpUrl != user_row["PFP_Url"]:
+                updates["PFP_Url"] = pfpUrl
+            if user_row["Description"] is None or desc != user_row["Description"]:
+                updates["Description"] = desc
+            if user_row["Bio_Link"] is None or url != user_row["Bio_Link"]:
+                updates["Bio_Link"] = url
+
+            if updates:
+                pfp_table.loc[user_index, updates.keys()] = updates.values()
+                print(f"PFP Tracked values updated for user {name}: {updates}")
+        else:
+            new_row = pd.DataFrame({
+                "index": [username],
+                "Name": [name],
+                "Favorites": [agg_likes],
+                "Retweets": [agg_retweets],
+                "Replies": [agg_replies],
+                "Impressions": [agg_impressions],
+                "PFP_Url": [pfpUrl],
+                "Description": [desc],
+                "Bio_Link": [url]
+            })
+            pfp_table = pfp_table._append(new_row, ignore_index=True)
+            pfp_table.to_sql(pfp_table_name, engine,
+                             if_exists="replace", index=False)
+            print(f"User {username} added to {pfp_table_name}")
     return pfp_table
 
 

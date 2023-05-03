@@ -49,6 +49,22 @@ class pfpTable(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class engagementTable(APIView):
+    # throttle_classes = [throttle.CustomThrottle]
+
+    def get(self, request, format=None):
+        cache_key = 'engagementTable_data'
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return Response(cached_data, status=status.HTTP_200_OK)
+        else:
+            queryset = Tweet.objects.all().order_by('-Impressions')
+            serializer = TweetSerializer(queryset, many=True)
+            cache.set(cache_key, serializer.data, 60)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 # Admin view for the PFP_Table
 class adminPfpTable(APIView):
     # throttle_classes = [throttle.CustomThrottle]

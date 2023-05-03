@@ -184,6 +184,28 @@ def check_new_pfp_table(engine, table_name):
         print(f"{table_name} Table already exists")
 
 
+def check_engagement_table(engine, table_name):
+    metadata = MetaData(bind=engine)
+
+    if not engine.has_table(table_name):
+        print("Creating table...")
+        Table(table_name, metadata,
+              Column('index', Text),
+              Column('Name', Text),
+              Column("Favorites", Integer),
+              Column("Retweets", Integer),
+              Column("Replies", Integer),
+              Column("Impressions", Integer),
+              Column("PFP_Url", Text),
+              Column("Description", Text),
+              Column("Bio_Link", Text),
+              )
+        metadata.create_all()
+        print(f"{table_name} created")
+    else:
+        print(f"{table_name} Table already exists")
+
+
 def write_to_db(engine, df, table_name):
     df.to_sql(table_name, engine, if_exists='append', index=True)
 

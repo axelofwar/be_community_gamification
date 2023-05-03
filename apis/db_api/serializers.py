@@ -19,5 +19,7 @@ class TweetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tweet
         # fields = '__all__'
+        # fields = ('Name', 'Favorites', 'Retweets', 'Replies',
+        #   'Impressions', 'Rank', 'Global_Reach', 'PFP_Url', 'Description', 'Bio_Link')
         fields = ('Name', 'Favorites', 'Retweets', 'Replies',
-                  'Impressions', 'Rank', 'Global_Reach', 'PFP_Url', 'Description', 'Bio_Link')
+                  'Impressions', 'PFP_Url', 'Description', 'Bio_Link')
