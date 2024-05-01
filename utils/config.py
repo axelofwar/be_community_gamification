@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 if 'GITHUB_ACTION' not in os.environ:
     load_dotenv()
 
-@dataclass(slots=True)
+@dataclass()
 class Config:
     """
     DataModel for config parameters used throughout the application

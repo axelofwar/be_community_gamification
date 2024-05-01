@@ -73,10 +73,10 @@ pg.check_pfp_table(engine, pfpTable)
 pg.check_new_pfp_table(engine, newpfpTable)
 
 # Init flags and empty frames for those used throughout the app
-author = ""
-df = pd.DataFrame()
-export_df = pd.DataFrame()
-export_include_df = pd.DataFrame()
+# author = ""
+# df = pd.DataFrame()
+# export_df = pd.DataFrame()
+# export_include_df = pd.DataFrame()
 
 def display_image(img1: Image, pfp_link: str):
     """
@@ -126,7 +126,6 @@ def get_stream():
             logging.info("\n\nGOT RESPONSE!")
             cv2.destroyAllWindows()
             if config.update_flag == True:
-                # print("UPDATING RULES")
                 st.update_rules()
                 config.update_flag = False
 
@@ -135,8 +134,8 @@ def get_stream():
             logging.info(f"JSON Response: {json_response}")
 
             _id = json_response["data"]["id"]
-            matching_rules = json_response["matching_rules"]
-            tag = matching_rules[0]["tag"]
+            # matching_rules = json_response["matching_rules"]
+            # tag = matching_rules[0]["tag"]
             full_text = json_response["data"]["text"]
 
             logging.info(f"\nTEXT: {full_text}")
@@ -182,7 +181,6 @@ def get_stream():
 
                 gpt4_response = "No match for this user"
                 for y00t_file in random_y00ts:
-                    # for filename in os.listdir(folder_path):
                     for degod_file in random_degods:
                         if y00t_file.endswith(".png") or y00t_file.endswith(".jpg"):
                             with open(os.path.join(y00t_folder_path, y00t_file), "rb") as f:
@@ -325,7 +323,6 @@ def get_stream():
             '''
 
             '''
-
             if tweet_data["includes"] and "tweets" in tweet_data["includes"]:
                 print("Users: ", tweet_data["includes"]["users"])
                 for user in tweet_data["includes"]["users"]:

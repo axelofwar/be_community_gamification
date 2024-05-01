@@ -3,7 +3,7 @@ import yaml
 import tweepy
 import os
 
-from utils import twitter_tools as th
+from depreceated import twitter_tools as th
 from dotenv import load_dotenv
 load_dotenv()
 

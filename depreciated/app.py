@@ -4,7 +4,7 @@ import yaml
 # from utils import mod as tools
 # from utils import postgres_tools as pg
 # from utils import stream_tools as st
-from utils import twitter_tools as th
+from depreceated import twitter_tools as th
 from utils import discord_tools as dh
 from utils import chat_gpt_tools as gpt
 from dotenv import load_dotenv
