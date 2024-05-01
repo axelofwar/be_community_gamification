@@ -1,10 +1,10 @@
 import openai
 import os
 import yaml
-import asyncio
 from dotenv import load_dotenv
-# import cv2
+import logging
 from IPython.display import Markdown, display
+from typing import List, Dict
 load_dotenv()
 
 '''
@@ -20,22 +20,25 @@ with open("utils/yamls/params.yml", "r") as paramFile:
 
 # POPULATE OPENAI PARAMETERS
 openai.api_endpoint = params["openai_endpoint"]+"/chat/completions"
-print("OpenAI API Endpoint: ", openai.api_endpoint)
+logging.info(f"OpenAI API Endpoint: {openai.api_endpoint}")
 
 openai.api_key = os.environ['OPENAI_API_KEY']
 if not openai.api_key:
     openai.api_key = ""
-    print("OPENAI API KEY NOT FOUND")
+    logging.error("OPENAI API KEY NOT FOUND")
 
 
 # CHAT GPT REPONSE CALL
-async def chatGPTcall(mPrompt, mModel, mTemp, mTokens):  # function for ChatGPT call
+def chat_gpt_call(m_prompt: str, m_model: str, m_temp: float, m_tokens: int) -> openai.completion_v1.Completion:
+    """
+    Function for ChatGPT call
+    """
     response = openai.Completion.create(
-        model=mModel,
-        prompt=mPrompt,
+        model=m_model,
+        prompt=m_prompt,
         # uniqueness modifiers
-        temperature=mTemp,
-        max_tokens=mTokens,
+        temperature=m_temp,
+        max_tokens=m_tokens,
         top_p=1,
         frequency_penalty=0.0,
         presence_penalty=0.6,
@@ -43,13 +46,17 @@ async def chatGPTcall(mPrompt, mModel, mTemp, mTokens):  # function for ChatGPT 
     return response
 
 
-# def ask_GPT4(system_intel, prompt, model):
-#     result = openai.ChatCompletion.create(model=model,
-#                                           messages=[{"role": "system", "content": system_intel},
-#                                                     {"role": "user", "content": prompt}])
-#     display(Markdown(result['choices'][0]['message']['content']))
-#     return result['choices'][0]['message']['content']
+def ask_gpt4(system_intel: str, prompt: str, model: str) -> str:
+    """
+    Function for GPT4 call
+    """
+    result = openai.ChatCompletion.create(model=model,
+                                          messages=[{"role": "system", "content": system_intel},
+                                                    {"role": "user", "content": prompt}])
+    display(Markdown(result['choices'][0]['message']['content']))
+    return result['choices'][0]['message']['content']
 
+# TODO: Continue to experiment with better openapi implementations
 # def gpt4_call(prompt, model="gpt-4-32k", max_tokens=5000, temperature=0.8, n=1):
 #     response = openai.Completion.create(
 #         engine=model,

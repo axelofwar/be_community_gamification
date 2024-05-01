@@ -17,6 +17,9 @@ TODO:
 
 class TweetSerializer(serializers.ModelSerializer):
     class Meta:
+        """
+        Metadata for model serializer. Depreciated Rank + Global Reach due to nft inspect api issues
+        """
         model = Tweet
         # fields = '__all__'
         # fields = ('Name', 'Favorites', 'Retweets', 'Replies',

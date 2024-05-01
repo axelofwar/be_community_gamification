@@ -5,7 +5,7 @@ from time import sleep
 import requests
 import pandas as pd
 # import yaml
-from config import Config
+from utils.config import Config
 
 '''
 Tools for interacting with the NFTInspect API - contains functions for:

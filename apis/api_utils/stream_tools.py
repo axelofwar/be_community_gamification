@@ -2,8 +2,9 @@ from dotenv import load_dotenv
 import json
 import os
 import requests
-import pandas as pd
 import sys
+import logging
+from typing import Dict, List
 
 if "utils" not in sys.path:
     sys.path.append(os.path.dirname(os.path.dirname(
@@ -29,7 +30,7 @@ params = st.params
 
 
 # SET BEARER TOKEN AUTH
-def bearer_oauth(r):
+def bearer_oauth(r: requests.PreparedRequest) -> requests.PreparedRequest:
     """
     Method required by bearer token authentication.
     """
@@ -40,7 +41,12 @@ def bearer_oauth(r):
 
 
 # GET RULES OF CURRENT STREAM
-def get_rules():
+def get_rules() -> Dict:
+    """
+    Get current stream rules from API
+
+    :return json_response: dict of rules
+    """
     response = requests.get(
         "https://api.twitter.com/2/tweets/search/stream/rules", auth=bearer_oauth
     )
@@ -49,12 +55,15 @@ def get_rules():
             "Cannot get rules (HTTP {}): {}".format(
                 response.status_code, response.text)
         )
-    print(json.dumps(response.json()))
+    logging.info(json.dumps(response.json()))
     return response.json()
 
 
 # DELETE CURRENT SET STREAM SET RULES
-def delete_all_rules(rules):
+def delete_all_rules(rules: Dict) -> None:
+    """
+    Delete current stream rules on API
+    """
     if rules is None or "data" not in rules:
         return None
 
@@ -71,16 +80,19 @@ def delete_all_rules(rules):
                 response.status_code, response.text
             )
         )
-    print(json.dumps(response.json()))
+    logging.info(json.dumps(response.json()))
 
 
 # SET CURRENT STREAM RULES
-def set_rules():
+def set_rules() -> None:
+    """
+    Set rules for the twitter stream to use
+    """
     # add more error handling for real-time rule adjustment gaps
     config = params.get_config()
-    my_rules = config.rules
-    tags = config.tags
-    rules = []
+    my_rules: List = config.rules
+    tags: List = config.tags
+    rules: List = []
 
     if params.update_flag == True:
         my_rules.append(config.add_rule)
@@ -90,18 +102,18 @@ def set_rules():
     for rule in my_rules:
         rules.append(
             {"value": rule, "tag": tags[my_rules.index(rule)]})
-    print(("ADDED RULES USED:\n", rules))
+    logging.info(("ADDED RULES USED:\n", rules))
 
     response = requests.get(
         "https://api.twitter.com/2/tweets/search/stream/rules", auth=bearer_oauth
     )
-    axel_rules = get_rules()
+    axel_rules: Dict = get_rules()
     if response.status_code != 200:
         delete_all_rules(axel_rules)
-        print("Reconnecting to the stream...")
+        logging.warning("Reconnecting to the stream...")
         params.recount += 1
 
-    payload = {"add": rules}
+    payload: Dict = {"add": rules}
     response = requests.post(
         "https://api.twitter.com/2/tweets/search/stream/rules",
         auth=bearer_oauth,
@@ -112,22 +124,28 @@ def set_rules():
             "Cannot add rules (HTTP {}): {}".format(
                 response.status_code, response.text)
         )
-    print(json.dumps(response.json()))
+    logging.info(json.dumps(response.json()))
 
 
 # UPDATE CURRENT STREAM RULES
-def update_rules():
+def update_rules() -> None:
+    """
+    Update the rules that were set to the API
+    """
     config = params.get_config()
 
     if config.update_flag == True:
         delete_all_rules(get_rules())
         set_rules()
         config.update_flag = False
-        print("CONFIG CHECK COMPLETE\n")
+        logging.info("CONFIG CHECK COMPLETE\n")
 
 
 # REMOVE CURRENT STREAM RULES
-def remove_rules():
+def remove_rules() -> None:
+    """
+    Remove the current rules on the twitter API stream
+    """
     config = params.get_config()
 
     if config.remove_rule == []:
@@ -146,9 +164,9 @@ def remove_rules():
 
 
 def main():
+    """
+    Main function to reset current rules in yaml and display them 
+    """
     set_rules()
     rules = get_rules()
-    return print("STREAM RULES SET:", rules)
-
-
-# main()
+    return logging.info(f"STREAM RULES SET: {rules}")

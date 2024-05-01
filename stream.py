@@ -8,13 +8,15 @@ import cv2
 import numpy as np
 from utils import stream_tools as st
 from utils import postgres_tools as pg
-# from utils import nft_inspect_tools as nft
 from utils import pfp_check as nft
 from utils import chat_gpt_tools as gpt
 from utils.config import Config
 from PIL import Image
 from io import BytesIO
 import random
+
+import logging
+logging.basicConfig(level=logging.INFO)
 
 
 if 'GITHUB_ACTION' not in os.environ:
@@ -44,7 +46,9 @@ Status: Working - 2023-02-23 - run the stream and store tweets matching the rule
     - if user ID is not in database, add to database
     - if user ID is in database, replace WHOLE database with users_df + updated aggregated metrics
     - create pfp table with aggregated metrics from users table taken from tweets table
-    - access nft-inspect api to get pfp status and holder rank + global reach
+
+Depreceated
+    - access nft-inspect api to get pfp status and holder rank + global reach (api depcreceated)
 
 TODO:
     - add time based functionality that resets the db every 30 days
@@ -52,23 +56,15 @@ TODO:
     - or do we want to have multiple instances for each project connecting to our same database that can modify their own rules?
 '''
 
-# Twitter API constants
-# bearer_token = os.environ.get("TWITTER_BEARER_TOKEN")
-# bearer_token = os.environ["TWITTER_BEARER_TOKEN"]
 # Postgres constants
-
-# print("Type of config: ", type(config))
-# if config is None:
-# params = Config()
 params = st.params
 
-
+# Set tables based on constants
 engine = pg.start_db(params.db_name)
 tweetsTable = params.metrics_table_name
 usersTable = params.aggregated_table_name
 pfpTable = params.pfp_table_name
 newpfpTable = params.new_pfp_table_name
-
 
 # check if tables exist and create if not
 pg.check_metrics_table(engine, tweetsTable)
@@ -82,11 +78,13 @@ df = pd.DataFrame()
 export_df = pd.DataFrame()
 export_include_df = pd.DataFrame()
 
-# def get_export_df():
-#     return export_include_df
+def display_image(img1: Image, pfp_link: str):
+    """
+    Display the image using openCV for similarity comparison
 
-
-def display_image(img1, pfp_link):
+    :param img1: the image to display
+    :param pfp_link: the link for the pfp of the image
+    """
     img1_cv = np.array(img1)
     img1_cv = cv2.cvtColor(img1_cv, cv2.COLOR_BGR2RGB)
     img1_cv = cv2.resize(img1_cv, (500, 500))
@@ -95,22 +93,25 @@ def display_image(img1, pfp_link):
 
 
 def get_stream():
+    """
+    Run the twitter API stream and execute aggregation logic
+    """
     config = Config.get_config(params)
     response = requests.get(
         "https://api.twitter.com/2/tweets/search/stream", auth=st.bearer_oauth, stream=True,
     )
 
-    print(response.status_code)
+    logging.info(f"Status: {response.status_code}")
 
     if response.status_code == 429:
-        print("TOO MANY REQUESTS")
+        logging.error("TOO MANY REQUESTS")
         time.sleep(300)  # wait 5 minutes
         # waiting only 60 seconds doesn't seem to solve the problem
         get_stream()
 
     if response.status_code != 200:
         try:
-            print("Reconnecting to the stream...")
+            logging.info("Reconnecting to the stream...")
             config.recount += 1
             st.set_rules(st.delete_all_rules(st.get_rules()))
         except Exception as e:
@@ -119,9 +120,10 @@ def get_stream():
                     response.status_code, response.text, e
                 )
             )
+    # Per line in the response, store the user data and the corresponding tweet data
     for response_line in response.iter_lines():
         if response_line:
-            print("\n\nGOT RESPONSE!")
+            logging.info("\n\nGOT RESPONSE!")
             cv2.destroyAllWindows()
             if config.update_flag == True:
                 # print("UPDATING RULES")
@@ -130,28 +132,29 @@ def get_stream():
 
             json_response = json.loads(response_line)
 
-            print("JSON Response: ", json_response)
+            logging.info(f"JSON Response: {json_response}")
 
             _id = json_response["data"]["id"]
             matching_rules = json_response["matching_rules"]
             tag = matching_rules[0]["tag"]
             full_text = json_response["data"]["text"]
 
-            print("\nTEXT: ", full_text)
+            logging.info(f"\nTEXT: {full_text}")
 
             # TODO: if original tweet or quoted/retweeted do we reward engager + author?
             # aggregate (x/y)*engagement to original author
             # aggregate (x/x)*engagement to quote/retweeter
+
             pfp_link_list, matched_users, matched_ids, non_holders = [], [], [], []
             members = pd.DataFrame()
-            print("\nTweet_ID: ", _id)
-            tweet_data = st.get_data_by_id(_id)
-            # print("Tweet Data: ", tweet_data)
+            logging.info(f"\nTweet_ID: {_id}")
+            tweet_data = st.get_data_by_id(str(_id))
+            logging.debug(f"Tweet Data: {tweet_data}")
             for user in tweet_data["includes"]["users"]:
                 pfps = st.get_profile_picture_metadata(
-                    user["username"])
+                    str(user["username"]))
                 pfp_link = pfps[0]
-                print("Username: ", user["username"])
+                logging.info(f"Username: {user['username']}")
 
                 response1 = requests.get(pfp_link)
                 pfp = Image.open(BytesIO(response1.content)).convert("L")
@@ -199,34 +202,38 @@ def get_stream():
                                 wearing_degod_pfp = nft.check_pfp(
                                     pfp, degod, degod_folder_path, degod_file)
 
-                    system_intel = "You are GPT-4, answer my question as as a twitter meme and comedy expert. Your goal is to use crypto twitter relevant jokes and memes \
-                            in order to generate a response that will make the user laugh and go viral. You are not allowed to use any personaly identifiable information about the user. \
-                                You are not allowed to use any information about the user that is not publicly available on twitter. You can use the user's profile picture, \
-                                    their username, their bio, their tweets, their followers, their following, their likes, their retweets, their quotes, their replies, \
-                                        their media, their website, their birthday, their join date, their pinned tweet, their lists, and their moments. \
-                                            You can also use gifs and images or short clips from the internet to generate your response. "
+                    # If running in debug mode - test the chat GPT response script 
+                    if logging.basicConfig(level=logging.DEBUG):
+                        system_intel = "You are GPT-4, answer my question as as a twitter meme and comedy expert. Your goal is to use crypto twitter relevant jokes and memes \
+                                in order to generate a response that will make the user laugh and go viral. You are not allowed to use any personaly identifiable information about the user. \
+                                    You are not allowed to use any information about the user that is not publicly available on twitter. You can use the user's profile picture, \
+                                        their username, their bio, their tweets, their followers, their following, their likes, their retweets, their quotes, their replies, \
+                                            their media, their website, their birthday, their join date, their pinned tweet, their lists, and their moments. \
+                                                You can also use gifs and images or short clips from the internet to generate your response. "
 
-                    prompt = f"Your system intel is as follows: {system_intel} and your task is as follows: Generate a funny and potentially viral reponse to the following tweet: \n\n{full_text}\n\nUser: {user['username']}\n\n \
-                        Use twitter memes, jokes, gifs, images, and other references to generate your response. \n\n"
+                        prompt = f"Your system intel is as follows: {system_intel} and your task is as follows: Generate a funny and potentially viral reponse to the following tweet: \n\n{full_text}\n\nUser: {user['username']}\n\n \
+                            Use twitter memes, jokes, gifs, images, and other references to generate your response. \n\n"
 
-                    model = "gpt-3.5-turbo-0301"
-                    # model = "gpt-4-32k"
-                    print("Wearing Y00t PFP: ", wearing_y00t_pfp)
-                    print("Wearing Degod PFP: ", wearing_degod_pfp)
+                        model = "gpt-3.5-turbo-0301"
+                        # model = "gpt-4-32k"
+
+                        gpt4_response = gpt.chat_gpt_call(
+                                model, prompt, 0.9, 1000)
+                        
+                    logging.info(f"Wearing Y00t PFP: {wearing_y00t_pfp}")
+                    logging.info(f"Wearing Degod PFP: {wearing_degod_pfp}")
+
                     if wearing_y00t_pfp[0] == True:
-                        print(
+                        logging.debug(
                             f"User {user['username']} is wearing pfp similar to {y00t_file} or {degod_file}!")
                         matched_users.append(user["username"])
                         matched_ids.append(user["id"])
-
-                        gpt4_response = gpt.chatGPTcall(
-                            model, prompt, 0.9, 1000)
 
                         # gpt4_response = gpt.ask_GPT4(
                         #     system_intel, prompt, model)
                         break
                     elif wearing_degod_pfp[0] == True:
-                        print(
+                        logging.debug(
                             f"User {user['username']} is wearing pfp similar to {degod_file}!")
                         matched_users.append(user["username"])
                         matched_ids.append(user["id"])
@@ -238,7 +245,7 @@ def get_stream():
                         #     system_intel, prompt, model)
                         break
                     else:
-                        print(
+                        logging.debug(
                             f"User {user['username']} is not wearing pfp similar to {y00t_file} or {degod_file}!")
                         non_holders.append(user["username"])
 
@@ -246,41 +253,40 @@ def get_stream():
 
             # set default table before each read
             pfp_table = pd.read_sql_table(newpfpTable, engine)
-            print("PFP List: ", pfp_link_list)
+            logging.debug(f"PFP List: {pfp_link_list}")
             for username in matched_users:
-                print("Username: ", username)
-                print("User already in database")
+                logging.debug(f"User {username} already in database")
                 # update metrics
                 metrics = st.get_user_metrics_by_days(
                     matched_ids[matched_users.index(username)], params.history)
-                print("Metrics: ", metrics)
-                bio_link, description = st.get_bio_url(username)
+                logging.debug(f"Metrics: {metrics}")
+                bio_link, description = st.get_bio_url(str(username))
                 member_data = pd.DataFrame(
                     [[username, user["name"], metrics["likes"], metrics["retweets"], metrics["replies"], metrics["impressions"],
                       pfp_link_list[matched_users.index(username)], description, bio_link]])
                 member_data.columns = [
                     "index", "Name", "Favorites", "Retweets", "Replies", "Impressions", "PFP_Url", "Description", "URL"]
-                print("Member Data: ", member_data)
+                logging.debug(f"Member Data: {member_data}")
 
-                pfp_table = pd.read_sql_table(newpfpTable, engine)
-                print("Calling update pfp tracked table...")
+                # pfp_table = pd.read_sql_table(newpfpTable, engine)
+                # pfp_table is now read inside update_pfp_tracked_table
+                logging.info("Calling update pfp tracked table...")
                 st.update_pfp_tracked_table(
-                    engine, pfp_table, user["name"], username, metrics["likes"], metrics["retweets"], metrics["replies"], metrics["impressions"], pfp_link_list[matched_users.index(username)], description, bio_link)
+                    engine, user["name"], username, metrics["likes"], metrics["retweets"], metrics["replies"], metrics["impressions"], pfp_link_list[matched_users.index(username)], description, bio_link)
                 members = pd.concat([members, member_data])
 
             for non_holder in non_holders:
                 if non_holder in pfp_table["index"].values:
-                    print("Non holder already in database")
+                    logging.debug("Non holder already in database - removing...")
                     pfp_table = pfp_table.drop(
                         pfp_table[pfp_table["index"] == non_holder].index)
                     pfp_table.to_sql(
                         newpfpTable, engine, if_exists="replace", index=False)
                 else:
-                    print("Non holder not in database")
+                    logging.debug("Non holder not in database")
 
-            if gpt4_response != "No match for this user":
-                print("Sending response to tweet...")
-                print("Response: ", gpt4_response)
+            if gpt4_response != "No match for this user" and logging.basicConfig(level=logging.DEBUG):
+                logging.debug(f"Sending response: {gpt4_response} to tweet...")
 
             # determine ways to get rank, reach, and pfp status
             # nft-inspect api may be limiting/blocking my ip address
@@ -375,12 +381,14 @@ def get_stream():
                 TODO:
                 - determine why frank and y00ts are not in the list of holders
                 - determine if we can get pfp metadata without nft inspect
-                - determine why y00ts have the wrong pfp
+                - perfect sim score or other image detection method for why y00ts have the wrong pfp
             '''
 
 
 def main():
-    # rules = st.get_rules()
+    """
+    Main function for setting the desired rules and activating the twitter stream
+    """
     st.delete_all_rules(st.get_rules())
     config = Config.get_config(params)
     config.history = 30  # number of days to track back tweet metrics

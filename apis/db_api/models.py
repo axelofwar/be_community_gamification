@@ -1,5 +1,5 @@
 from django.db import models
-
+import logging
 '''
 Models are the single, definitive source of information about your data.
 They contain the essential fields and behaviors of the data you’re storing.
@@ -15,6 +15,11 @@ TODO:
 
 
 class Tweet(models.Model):
+    """
+    Class to capture data from database to return in API -> fields of leaderboard
+
+    Depreciated rank and global reach due to nft inspect api issues
+    """
     index = models.CharField(
         max_length=255, primary_key=True, default='defaultUser')
     Name = models.CharField(max_length=255)
@@ -29,12 +34,16 @@ class Tweet(models.Model):
     Bio_Link = models.CharField(max_length=255)
 
     class Meta:
+        """
+        Metadata of the database table
+        """
         # managed = False
         db_table = 'pfp_table'
         verbose_name_plural = 'pfp_table'
 
-    def __str__(self):
-        # print(f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions, and is ranked {self.Rank} with a global reach of {self.Global_Reach}, pfp url: {self.PFP_Url}, description: {self.Description}, and bio link: {self.Bio_Link}")
-        # return f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions, and is ranked {self.Rank} with a global reach of {self.Global_Reach} pfp url: {self.PFP_Url}, description: {self.Description}, and bio link: {self.Bio_Link}"
-        print(f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions, with  pfp url: {self.PFP_Url}, description: {self.Description}, and bio link: {self.Bio_Link}")
+    def __str__(self) -> str:
+        """
+        :return: model members
+        """
+        logging.info(f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions, with  pfp url: {self.PFP_Url}, description: {self.Description}, and bio link: {self.Bio_Link}")
         return f"{self.Name} has {self.Favorites} favorites, {self.Retweets} retweets, {self.Replies} replies, and {self.Impressions} impressions, with pfp url: {self.PFP_Url}, description: {self.Description}, and bio link: {self.Bio_Link}"

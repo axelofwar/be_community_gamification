@@ -5,7 +5,8 @@ import sys
 
 
 def main():
-    """Run administrative tasks."""
+    """Run administrative tasks.
+    :raise ImportError: if couldn't import Django"""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.settings')
     try:
         from django.core.management import execute_from_command_line

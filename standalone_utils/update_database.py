@@ -1,8 +1,8 @@
 import os
 # import yaml
 import pandas as pd
-import postgres_tools as pg
-from config import Config
+import utils.postgres_tools as pg
+from utils.config import Config
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -19,12 +19,6 @@ config = Config()
 
 bearer_token = os.environ.get("TWITTER_BEARER_TOKEN")
 engine = pg.start_db("test")
-
-# with open("utils/yamls/config.yml", "r") as f:
-#     config = yaml.load(f, Loader=yaml.FullLoader)
-
-
-#
 
 # test data
 included_id = "1628657154742792197"

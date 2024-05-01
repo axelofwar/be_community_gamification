@@ -7,5 +7,8 @@ This file is used to configure the app, and is automatically generated when the 
 
 
 class DbApiConfig(AppConfig):
+    """
+    Default config fields for the db_api
+    """
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'db_api'

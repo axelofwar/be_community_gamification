@@ -1,12 +1,13 @@
 import pandas as pd
 import psycopg2
-import yaml
 import csv
 import os
 import subprocess
-from config import Config
-# import filtered_stream as fs
+import logging
+from pathlib import Path
 from sqlalchemy import create_engine, Table, Column, Integer, Text, MetaData, select
+from sqlalchemy.engine import Engine
+
 from dotenv import load_dotenv
 if 'GITHUB_ACTION' not in os.environ:
     load_dotenv()
@@ -48,59 +49,85 @@ POSTGRES_HOST = os.getenv("DATABASE_HOST")  # render database
 # POSTGRES_PORT = os.environ["POSTGRESQL_PORT"] # for local testing
 POSTGRES_PORT = os.getenv("DATABASE_PORT")  # render database
 
+create_const = "Creating Table..."
 
 # POSTGRES SUBPROCESS FUNCTIONS
 # CSV FUNCTIONS
 
 
-def write_df_to_csv(df, csv_path):
+def write_df_to_csv(df: pd.DataFrame, csv_path: Path) -> None:
+    """
+    Write dataframe to csv output with preset configs
+    """
     df.to_csv(csv_path, index=False, quoting=csv.QUOTE_ALL)
 
 
-def read_df_to_csv(csv_path):
+def read_df_to_csv(csv_path: Path) -> pd.DataFrame:
+    """
+    Read csv values into pandas dataframe with preset configs
+    """
     df = pd.read_csv(
         csv_path, index_col=0, on_bad_lines="skip")
     return df
 
 
 # DATABASE ADMIN FUNCTIONS
-def create_db(db_name, user):
+def create_db(db_name: str, user: str) -> None:
+    """
+    Create PostgreSQL database if missing and assign admin user
+
+    :param: name of database to instantiate
+    :param user: the name of the user to make admin
+    """
     try:
-        print("\nCreating database...")
+        logging.info("\nCreating database...")
         subprocess.run(["createdb", "-U", POSTGRES_ADMIN_USER,
                         "-O", user, db_name], check=True)
-        print("Database created")
+        logging.info("Database created")
     except subprocess.CalledProcessError:
-        print("Database '{}' already exists".format(db_name))
+        logging.error("Database '{}' already exists".format(db_name))
 
 
-def create_role(user, password):
+def create_role(user: str, password: str) -> None:
+    """
+    Create role in database for user levels in the PostgreSQL database
+
+    :param user: the user role to create
+    :param password: the password for that role
+    """
     try:
         subprocess.run(
             ["createuser", "-U", POSTGRES_ADMIN_USER, user], check=True)
-        print("Role '{}' created.".format(user))
+        logging.info("Role '{}' created.".format(user))
         subprocess.run(["psql", "-U", POSTGRES_ADMIN_USER, "-c",
                         f"ALTER USER {user} WITH PASSWORD '{password}'"], check=True)
 
     except subprocess.CalledProcessError:
-        print("Role '{}' already exists.".format(user))
+        logging.error("Role '{}' already exists.".format(user))
 
 
 # DATABASE INTERACTION FUNCTIONS
-def start_db(db_name):
+def start_db(db_name: str) -> Engine:
+    """
+    Instantiate and start the PostgreSQL database
+    """
     engine = create_engine(
-        # 'postgresql://'+POSTGRES_USER+':'+POSTGRES_PASSWORD+'@localhost:5433/'+db_name)
         'postgresql://'+POSTGRES_USER+':'+POSTGRES_PASSWORD+'@'+POSTGRES_HOST+':'+POSTGRES_PORT+'/'+db_name)
 
     return engine
 
 
-def check_metrics_table(engine, table_name):
+def check_metrics_table(engine: Engine, table_name: str) -> None:
+    """
+    Check the metrics table and specific members in the database -> create if missing
 
+    :param engine: instance connection to the PostgreSQL database
+    :param table_name: the name of the table to check
+    """
     metadata = MetaData(bind=engine)
 
     if not engine.has_table(table_name):
-        print("Creating table...")
+        logging.info(create_const)
         Table(table_name, metadata,
               Column('index', Text),
               Column('Author', Text),
@@ -112,16 +139,22 @@ def check_metrics_table(engine, table_name):
               Column('Tags', Text),
               )
         metadata.create_all()
-        print(f"{table_name} created")
+        logging.info(f"{table_name} created")
     else:
-        print(f"{table_name} Table already exists")
+        logging.info(f"{table_name} Table already exists")
 
 
-def check_users_table(engine, table_name):
+def check_users_table(engine: Engine, table_name: str) -> None:
+    """
+    Check the users table and specific members -> create if missing
+
+    :param engine: instance connection to the PostgreSQL database
+    :param table_name: the name of the table to check
+    """
     metadata = MetaData(bind=engine)
 
     if not engine.has_table(table_name):
-        print("Creating table...")
+        logging.info(create_const)
         Table(table_name, metadata,
               Column('index', Text),
               Column('Name', Text),
@@ -131,16 +164,22 @@ def check_users_table(engine, table_name):
               Column("Impressions", Integer),
               )
         metadata.create_all()
-        print(f"{table_name} created")
+        logging.info(f"{table_name} created")
     else:
-        print(f"{table_name} Table already exists")
+        logging.info(f"{table_name} Table already exists")
 
 
-def check_pfp_table(engine, table_name):
+def check_pfp_table(engine: Engine, table_name: str) -> None:
+    """
+    Check the pfp table and specific members -> create if missing
+
+    :param engine: instance connection to the PostgreSQL database
+    :param table_name: the name of the table to check
+    """
     metadata = MetaData(bind=engine)
 
     if not engine.has_table(table_name):
-        print("Creating table...")
+        logging.info(create_const)
         Table(table_name, metadata,
               Column('index', Text),
               Column('Name', Text),
@@ -148,23 +187,29 @@ def check_pfp_table(engine, table_name):
               Column("Retweets", Integer),
               Column("Replies", Integer),
               Column("Impressions", Integer),
-              Column("Rank", Integer),
-              Column("Global_Reach", Integer),
+            #   Column("Rank", Integer),
+            #   Column("Global_Reach", Integer),
               Column("PFP_Url", Text),
               Column("Description", Text),
               Column("Bio_Link", Text),
               )
         metadata.create_all()
-        print(f"{table_name} created")
+        logging.info(f"{table_name} created")
     else:
-        print(f"{table_name} Table already exists")
+        logging.info(f"{table_name} Table already exists")
 
 
-def check_new_pfp_table(engine, table_name):
+def check_new_pfp_table(engine: Engine, table_name: str) -> None:
+    """
+    Check the new pfp table and specific members -> create if missing
+
+    :param engine: instance connection to the PostgreSQL database
+    :param table_name: the name of the table to check
+    """
     metadata = MetaData(bind=engine)
 
     if not engine.has_table(table_name):
-        print("Creating table...")
+        logging.info(create_const)
         Table(table_name, metadata,
               Column('index', Text),
               Column('Name', Text),
@@ -172,23 +217,29 @@ def check_new_pfp_table(engine, table_name):
               Column("Retweets", Integer),
               Column("Replies", Integer),
               Column("Impressions", Integer),
-              Column("Rank", Integer),
-              Column("Global_Reach", Integer),
+            #   Column("Rank", Integer),
+            #   Column("Global_Reach", Integer),
               Column("PFP_Url", Text),
               Column("Description", Text),
               Column("Bio_Link", Text),
               )
         metadata.create_all()
-        print(f"{table_name} created")
+        logging.info(f"{table_name} created")
     else:
-        print(f"{table_name} Table already exists")
+        logging.info(f"{table_name} Table already exists")
 
 
-def check_engagement_table(engine, table_name):
+def check_engagement_table(engine: Engine, table_name: str) -> None:
+    """
+    Check the engagement table and specific members -> create if missing
+
+    :param engine: instance connection to the PostgreSQL database
+    :param table_name: the name of the table to check
+    """
     metadata = MetaData(bind=engine)
 
     if not engine.has_table(table_name):
-        print("Creating table...")
+        logging.info(create_const)
         Table(table_name, metadata,
               Column('index', Text),
               Column('Name', Text),
@@ -201,16 +252,28 @@ def check_engagement_table(engine, table_name):
               Column("Bio_Link", Text),
               )
         metadata.create_all()
-        print(f"{table_name} created")
+        logging.info(f"{table_name} created")
     else:
-        print(f"{table_name} Table already exists")
+        logging.info(f"{table_name} Table already exists")
 
 
-def write_to_db(engine, df, table_name):
+def write_to_db(engine: Engine, df: pd.DataFrame, table_name: str) -> None:
+    """
+    Write dataframe to the database table, append if table already exists
+
+    :param engine: instance connection to the PostgreSQL database
+    :param df: the dataframe with data to add
+    :param table_name: the name of the table to check
+    """
     df.to_sql(table_name, engine, if_exists='append', index=True)
 
 
-def get_admin_user(database_name):
+def get_admin_user(database_name: str):
+    """
+    Get the current admin user of the database
+
+    :param database_name: (Self-explanatory)
+    """
     conn = psycopg2.connect(
         host="localhost",
         database=database_name,
@@ -221,33 +284,21 @@ def get_admin_user(database_name):
     cursor.execute("SELECT * FROM pg_user")
     rows = cursor.fetchall()
     for row in rows:
-        print(row)
+        logging.debug(f"Row: {row}")
 
 
-def get_all_user_metric_rows(engine, table_name, username):
+def get_all_user_metric_rows(engine: Engine, table_name: str, username: str):
+    """
+    Return all of the data in the metrics table for a user
+
+    :param engine: instance connection to the PostgreSQL database
+    :param table_name: the name of the table to check
+    :param username: the user to get the data of
+
+    """
     metadata = MetaData(bind=engine)
     table = Table(table_name, metadata, autoload=True)
     query = select([table]).where(table.columns.index == username)
     result = engine.execute(query)
     rows = result.fetchall()
     return rows
-
-
-# MAIN FUNCTION FOR STANDALONE DB FUNCTIONS
-# def main():
-    # Assuming database and roles aren't created yet
-    # create_role(POSTGRES_USER, POSTGRES_PASSWORD)
-    # create_db("test", POSTGRES_ADMIN_USER)
-
-    # with open("utils/yamls/config.yml", "r") as file:
-    #     config = yaml.load(file, Loader=yaml.FullLoader)
-    # Assuming database and roles already exist
-    # engine = start_db(config["db_name"])
-    # df = fs.get_export_df()
-    # print(df)
-
-    # write_to_db(engine, df, table_name'') # currently an empty frame for some reason
-
-
-# if __name__ == "__main__":
-#     main()

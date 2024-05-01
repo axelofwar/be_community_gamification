@@ -1,6 +1,6 @@
-import stream_tools as st
+import utils.stream_tools as st
 # import yaml
-from config import Config
+from utils.config import Config
 
 '''
 Standalone file to remove rules from the rules.yml file
@@ -12,12 +12,11 @@ Then reset the REMOVE_RULE in the config.yml file to ""
 params = Config()
 
 
-# def main():
-#     config = Config.get_config(params)
-#     config.remove_rule = "myRule"
-#     config.update_rules()
-#     st.update_rules()
-#     return
+def main():
+    config = Config.get_config(params)
+    config.remove_rule = "myRule"
+    config.update_rules()
+    st.update_rules()
 
 
-# main()
+main()

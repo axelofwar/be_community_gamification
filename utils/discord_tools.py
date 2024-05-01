@@ -1,11 +1,9 @@
 import asyncio
 import discord
 import os
-import re
 import sys
-# import urllib.parse # for links in channel messages
-import yaml
 from collections import Counter
+import logging
 
 '''
 Tools for interacting with the Discord API - contains functions for:
@@ -20,8 +18,6 @@ if "utils" not in sys.path:
     # print("Sys path: ", sys.path)
     from utils import stream_tools as st
 
-# INITIALIZE DISCORD CLIENT
-
 params = st.params
 
 
@@ -32,42 +28,40 @@ async def init_discord(cancel):
         intents.message_content = True
         client = discord.Client(intents=intents)
     else:
-        print("CANCELLED")
+        logging.error("CANCELLED")
         return
 
     if client.is_closed():
-        print('Closed client: ', client.status)
+        logging.error(f"Closed client: {client.status}")
         sys.exit()
     else:
-        print('Opened client:', client.status)
-
-    @client.event
-    async def on_ready():
-        # ensure the bot is ready and not stuck in a current activity
-        print("The bot is ready!")
-        print(f'{client.user} has connected to Discord!')
-        print(f'{client.user} status: {client.status}')
-        print(f'{client.user} is connected to the following guild:')
-        print(f'{client.user} current activity: {client.activity}')
+        logging.info(f"Opened client: {client.status}")
 
     @client.event
     async def on_disconnect():
-        print(f'{client.user} has disconnected from Discord!')
+        logging.info(f'{client.user} has disconnected from Discord!')
+
+    async def on_ready():
+        # ensure the bot is ready and not stuck in a current activity
+        logging.info("The bot is ready!\n"
+                     f'{client.user} has connected to Discord!\n'
+                     f'{client.user} status: {client.status}\n'
+                     f'{client.user} is connected to the following guild:\n'
+                     f'{client.user} current activity: {client.activity}')
 
     return client
 
 
 # GET CHANNEL HISTORY BY ACCOUNT FOR DAYS PASSED IN
 async def get_channel_history(channel_id, history_days, cancel):
-
-    print("DISCORD BOT ENTERED")
-    # # Create a Discord client
+    logging.info("DISCORD BOT ENTERED")
+    # Create a Discord client
     if not cancel:
         client = await init_discord(cancel)
         discord_token = os.getenv("DISCORD_TOKEN")  # if using python .env file
 
     else:
-        print("CANCELLED")
+        logging.error("CANCELLED")
         return cancel
 
     try:
@@ -77,52 +71,52 @@ async def get_channel_history(channel_id, history_days, cancel):
             task = asyncio.create_task(client.start(discord_token))
             await asyncio.wait_for(task, params.timeout)
         else:
-            print("TASK CANCELLED")
+            logging.error("TASK CANCELLED")
             sys.exit()
 
-        # TODO: modify to display this info properly
-        print("Client User: ", client.user)
-        print(f'{client.user} status: {client.status}')
-        print(f'{client.user} is connected to the following guild:')
-        print(f'{client.user} current activity: {client.activity}')
-        print("CLIENT STARTED SUCCESSFULLY", client.status)
+        logging.info(f"Client User: {client.user}")
+        logging.info(f'{client.user} status: {client.status}')
+        logging.info(f'{client.user} is connected to the following guild:')
+        logging.info(f'{client.user} current activity: {client.activity}')
+        logging.info(f"CLIENT STARTED SUCCESSFULLY {client.status}")
     except asyncio.TimeoutError:
-        print("CLIENT TIMEOUT")
+        logging.error("CLIENT TIMEOUT")
     except discord.errors.LoginFailure as exc:
-        print(f'Error: {exc}')
+        logging.error(f'Discord Login Error: {exc}')
     except discord.errors.ClientException as exc1:
-        print(f'Error: {exc1}')
+        logging.error(f'Discord Client Error: {exc1}')
     except discord.errors.HTTPException as exc2:
-        print(f'Error: {exc2}')
+        logging.error(f'Discord HTTP Error: {exc2}')
     except discord.errors.DiscordException as exc4:
-        print(f'Error: {exc4}')
+        logging.error(f'Discord Error: {exc4}')
 
-    # TODO: add more channels to this list
-    print("DISCORD BOT STARTED")
+    logging.info("DISCORD BOT STARTED")
 
+    '''
     # UI LOGIC TO PROCESS CHANNEL ID USER INPUT
-    # if channel_id == None:
-    #     # use channel_id from config id
-    #     channel_value = int(config["data_channel_id"])
-    #     print("CHANNEL_VALUE: ", channel_value)
-    #     channel = client.get_channel(channel_value)
-    #     channel_id = channel_value
-    #     print("CHANNEL GET SUCCESS FROM NONE: ", channel)
+    if channel_id == None:
+        # use channel_id from config id
+        channel_value = int(config["data_channel_id"])
+        logging.info("CHANNEL_VALUE: ", channel_value)
+        channel = client.get_channel(channel_value)
+        channel_id = channel_value
+        logging.info("CHANNEL GET SUCCESS FROM NONE: ", channel)
 
-    # else:
-    #     print("CHANNEL VALUE RECIEVED: ", channel_id)
-    #     # use channel_id passed into UI
+    else:
+        logging.info("CHANNEL VALUE RECIEVED: ", channel_id)
+        # use channel_id passed into UI
+    '''
     try:
         channel = client.get_channel(int(channel_id))
-        print("CHANNEL GET SUCCESS: ", channel)
+        logging.info(f"CHANNEL GET SUCCESS: {channel}")
 
     except:
-        print("CHANNEL GET FAILED")
+        logging.error("CHANNEL GET FAILED")
         sys.exit()
 
-    print("CHANNEL HISTORY: ", history_days)
-    print("CHANNEL_ID POST: ", channel_id)
-    print("CHANNEL POST: ", channel)
+    logging.info(f"CHANNEL HISTORY: {history_days}")
+    logging.info(f"CHANNEL_ID POST: {channel_id}")
+    logging.info(f"CHANNEL POST: {channel}")
 
     channel_history = channel.history(limit=history_days, oldest_first=True)
 
@@ -133,27 +127,27 @@ async def get_channel_history(channel_id, history_days, cancel):
 
 
 # GET DISCORD MESSAGES IN LOOP AND WRITE TO FILE
-async def get_discord_messages(channel_history, outputFile):
+async def get_discord_messages(channel_history, output_file):
 
     async for message in channel_history:
         # process message here
-        # print("MESSAGE CHANNEL: ", message.channel)
-        # print("MESSAGE: ", message.content)
-        # print("MESSAGE AUTHOR: ", message.author)
-        # print("MESSAGE TIMESTAMP: ", message.created_at)
+        logging.debug("MESSAGE CHANNEL: %s, MESSAGE: %s, MESSAGE AUTHOR: %s, MESSAGE TIMESTAMP: %s", 
+                    message.channel, message.content, message.author, message.created_at)
+
         link = f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}"
         # print("LINK TO MESSAGE: ", link)
         # print("\n")
         messages = []
         messages.append(message.content)
-        print("DATA: ", message.content, file=outputFile)
-        print("AUTHOR: ", message.author, file=outputFile)
-        print("TIMESTAMP: ", message.created_at, file=outputFile)
-        print("LINK: ", link, file=outputFile)
-        outputFile.write("\n")
+        print("DATA: ", message.content, file=output_file)
+        print("AUTHOR: ", message.author, file=output_file)
+        print("TIMESTAMP: ", message.created_at, file=output_file)
+        print("LINK: ", link, file=output_file)
+        output_file.write("\n")
 
-    return messages, outputFile
+    return messages, output_file
 
+# Reset messages and questions
 messages = []
 questions = []
 
@@ -170,10 +164,10 @@ async def get_questions(chat_history):
             if word in message.content:
                 questions.append(message.content)
             question_counts[word] += message.content.lower().count(word)
-        # print("QUESTION COUNTS: ", question_counts)
-        # print("QUESTIONS: ", questions)
-        # top_3_questions = question_counts.most_common(3)
-        # return print("Top 3 commonly asked questions: ", top_3_questions)
+        logging.debug(f"QUESTION COUNTS: {question_counts}")
+        logging.debug(f"QUESTIONS: {questions}")
+        top_3_questions = question_counts.most_common(3)
+        logging.debug(f"Top 3 commonly asked questions: {top_3_questions}")
     return messages
 
 
@@ -197,14 +191,4 @@ async def get_keywords(channel_history):
         words = [word for word in words if word not in stopwords]
         word_counts.update(words)
         top_3_keywords = word_counts.most_common(3)
-
-        # incoporate links when channel that has them is included
-        # if re.match(f"^{question_words}", message.content, re.IGNORECASE):
-        #     question_counts.update([message.content])
-        # if re.search(r'\?$', message.content):
-        #     question_counts.update([message.content])
-
-        # print("Top 3 keywords: ", top_3_keywords)
-        # print("\n")
-
         return top_3_keywords
