@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from dotenv import load_dotenv
 from pathlib import Path
 import os
-import yaml
+
 from api_utils import stream_tools as st
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -37,10 +37,6 @@ POSTGRES_PORT = os.getenv("RENDER_PORT")  # render database
 
 DJANGO_SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
-# with open("../utils/yamls/config.yml", "r") as f:
-#     config = yaml.load(f, Loader=yaml.FullLoader)
-
-# db_name = config["db_name"]
 params = st.params
 db_name = params.db_name
 

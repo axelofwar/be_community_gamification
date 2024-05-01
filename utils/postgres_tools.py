@@ -21,14 +21,6 @@ Tools for interacting with postgresql databases - contains functions for:
     - Starting our connection to the database
     - Writing a dataframe to the database
     - Getting the admin user of the database
-
-TODO: add functions for adding columns to the table if they don't exist:
-    - index
-    - author
-    - favorites
-    - retweets
-    - replies
-    - tweet_id
 '''
 
 # POSTGRES CONFIG

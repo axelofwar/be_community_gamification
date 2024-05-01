@@ -10,6 +10,8 @@ if "utils" not in sys.path:
     sys.path.append(os.path.dirname(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__)))))
     from utils import stream_tools as st
+else:
+    from utils import stream_tools as st
 
 if 'GITHUB_ACTION' not in os.environ:
     load_dotenv()
