@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
 from typing import List
 from dotenv import load_dotenv
@@ -28,14 +28,18 @@ class Config:
     :param update_flag: bool telling whether or not to update the stream rules
     :param timeout: the length of the timeout wait for discord (TODO: and twitter?) stream - currently just discord
     """
-    add_rule: List = []
-    add_tag: List = []
-    remove_rule: List = []
-    remove_tag: List = []
+
+
+@dataclass
+class Config:
+    add_rule: List[str] = field(default_factory=list)
+    add_tag: List[str] = field(default_factory=list)
+    remove_rule: List[str] = field(default_factory=list)
+    remove_tag: List[str] = field(default_factory=list)
     account_to_query: str = ""
-    collections: List = []
-    rules: List = []
-    tags: List = []
+    collections: List[str] = field(default_factory=list)
+    rules: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
     db_name: str = "community_gamification"
     metrics_table_name: str = "metrics_table"
     pfp_table_name: str = "pfp_table" 
