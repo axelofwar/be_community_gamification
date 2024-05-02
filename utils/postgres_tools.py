@@ -4,9 +4,11 @@ import csv
 import os
 import subprocess
 import logging
+from typing import List
 from pathlib import Path
 from sqlalchemy import create_engine, Table, Column, Integer, Text, MetaData, select
 from sqlalchemy.engine import Engine
+from config import Config
 
 from dotenv import load_dotenv
 if 'GITHUB_ACTION' not in os.environ:
@@ -109,144 +111,220 @@ def start_db(db_name: str) -> Engine:
     return engine
 
 
-def check_metrics_table(engine: Engine, table_name: str) -> None:
+# def check_metrics_table(engine: Engine, table_name: str) -> None:
+#     """
+#     Check the metrics table and specific members in the database -> create if missing
+
+#     :param engine: instance connection to the PostgreSQL database
+#     :param table_name: the name of the table to check
+#     """
+#     metadata = MetaData(bind=engine)
+
+#     if not engine.has_table(table_name):
+#         logging.info(create_const)
+#         Table(table_name, metadata,
+#               Column('index', Text),
+#               Column('Author', Text),
+#               Column('Favorites', Integer),
+#               Column('Retweets', Integer),
+#               Column('Replies', Integer),
+#               Column('Impressions', Integer),
+#               Column('Tweet_ID', Text),
+#               Column('Tags', Text),
+#               )
+#         metadata.create_all()
+#         logging.info(f"{table_name} created")
+#     else:
+#         logging.info(f"{table_name} Table already exists")
+
+
+# def check_users_table(engine: Engine, table_name: str) -> None:
+#     """
+#     Check the users table and specific members -> create if missing
+
+#     :param engine: instance connection to the PostgreSQL database
+#     :param table_name: the name of the table to check
+#     """
+#     metadata = MetaData(bind=engine)
+
+#     if not engine.has_table(table_name):
+#         logging.info(create_const)
+#         Table(table_name, metadata,
+#               Column('index', Text),
+#               Column('Name', Text),
+#               Column('Favorites', Integer),
+#               Column("Retweets", Integer),
+#               Column("Replies", Integer),
+#               Column("Impressions", Integer),
+#               )
+#         metadata.create_all()
+#         logging.info(f"{table_name} created")
+#     else:
+#         logging.info(f"{table_name} Table already exists")
+
+
+# def check_pfp_table(engine: Engine, table_name: str) -> None:
+#     """
+#     Check the pfp table and specific members -> create if missing
+
+#     :param engine: instance connection to the PostgreSQL database
+#     :param table_name: the name of the table to check
+#     """
+#     metadata = MetaData(bind=engine)
+
+#     if not engine.has_table(table_name):
+#         logging.info(create_const)
+#         Table(table_name, metadata,
+#               Column('index', Text),
+#               Column('Name', Text),
+#               Column("Favorites", Integer),
+#               Column("Retweets", Integer),
+#               Column("Replies", Integer),
+#               Column("Impressions", Integer),
+#             #   Column("Rank", Integer),
+#             #   Column("Global_Reach", Integer),
+#               Column("PFP_Url", Text),
+#               Column("Description", Text),
+#               Column("Bio_Link", Text),
+#               )
+#         metadata.create_all()
+#         logging.info(f"{table_name} created")
+#     else:
+#         logging.info(f"{table_name} Table already exists")
+
+
+# def check_new_pfp_table(engine: Engine, table_name: str) -> None:
+#     """
+#     Check the new pfp table and specific members -> create if missing
+
+#     :param engine: instance connection to the PostgreSQL database
+#     :param table_name: the name of the table to check
+#     """
+#     metadata = MetaData(bind=engine)
+
+#     if not engine.has_table(table_name):
+#         logging.info(create_const)
+#         Table(table_name, metadata,
+#               Column('index', Text),
+#               Column('Name', Text),
+#               Column("Favorites", Integer),
+#               Column("Retweets", Integer),
+#               Column("Replies", Integer),
+#               Column("Impressions", Integer),
+#             #   Column("Rank", Integer),
+#             #   Column("Global_Reach", Integer),
+#               Column("PFP_Url", Text),
+#               Column("Description", Text),
+#               Column("Bio_Link", Text),
+#               )
+#         metadata.create_all()
+#         logging.info(f"{table_name} created")
+#     else:
+#         logging.info(f"{table_name} Table already exists")
+
+
+# def check_engagement_table(engine: Engine, table_name: str) -> None:
+#     """
+#     Check the engagement table and specific members -> create if missing
+
+#     :param engine: instance connection to the PostgreSQL database
+#     :param table_name: the name of the table to check
+#     """
+#     metadata = MetaData(bind=engine)
+
+#     if not engine.has_table(table_name):
+#         logging.info(create_const)
+#         Table(table_name, metadata,
+#               Column('index', Text),
+#               Column('Name', Text),
+#               Column("Favorites", Integer),
+#               Column("Retweets", Integer),
+#               Column("Replies", Integer),
+#               Column("Impressions", Integer),
+#               Column("PFP_Url", Text),
+#               Column("Description", Text),
+#               Column("Bio_Link", Text),
+#               )
+#         metadata.create_all()
+#         logging.info(f"{table_name} created")
+#     else:
+#         logging.info(f"{table_name} Table already exists")
+
+def check_table(engine: Engine, table_name: str, columns: List[Column]) -> None:
     """
-    Check the metrics table and specific members in the database -> create if missing
+    Check the table and specific members in the database -> create if missing
 
     :param engine: instance connection to the PostgreSQL database
     :param table_name: the name of the table to check
+    :param columns: list of Column objects representing the structure of the table
     """
     metadata = MetaData(bind=engine)
 
     if not engine.has_table(table_name):
         logging.info(create_const)
-        Table(table_name, metadata,
-              Column('index', Text),
-              Column('Author', Text),
-              Column('Favorites', Integer),
-              Column('Retweets', Integer),
-              Column('Replies', Integer),
-              Column('Impressions', Integer),
-              Column('Tweet_ID', Text),
-              Column('Tags', Text),
-              )
+        Table(table_name, metadata, *columns)
         metadata.create_all()
         logging.info(f"{table_name} created")
     else:
         logging.info(f"{table_name} Table already exists")
 
+def check_tables(engine: Engine, params: Config) -> None:
+    check_table(engine, params.metrics_table_name, [
+    Column('index', Text),
+    Column('Author', Text),
+    Column('Favorites', Integer),
+    Column('Retweets', Integer),
+    Column('Replies', Integer),
+    Column('Impressions', Integer),
+    Column('Tweet_ID', Text),
+    Column('Tags', Text),
+    ])
+    check_table(engine, params.aggregated_table_name, [
+    Column('index', Text),
+    Column('Name', Text),
+    Column('Favorites', Integer),
+    Column("Retweets", Integer),
+    Column("Replies", Integer),
+    Column("Impressions", Integer),
+    ])
+    check_table(engine, params.pfp_table_name, [
+    Column('index', Text),
+    Column('Name', Text),
+    Column("Favorites", Integer),
+    Column("Retweets", Integer),
+    Column("Replies", Integer),
+    Column("Impressions", Integer),
+    # Column("Rank", Integer),
+    # Column("Global_Reach", Integer),
+    Column("PFP_Url", Text),
+    Column("Description", Text),
+    Column("Bio_Link", Text),
+    ])
+    check_table(engine, params.new_pfp_table_name, [
+    Column('index', Text),
+    Column('Name', Text),
+    Column("Favorites", Integer),
+    Column("Retweets", Integer),
+    Column("Replies", Integer),
+    Column("Impressions", Integer),
+    # Column("Rank", Integer),
+    # Column("Global_Reach", Integer),
+    Column("PFP_Url", Text),
+    Column("Description", Text),
+    Column("Bio_Link", Text),
+    ])
+    # check_table(engine, 'engagement_table', [
+    # Column('index', Text),
+    # Column('Name', Text),
+    # Column("Favorites", Integer),
+    # Column("Retweets", Integer),
+    # Column("Replies", Integer),
+    # Column("Impressions", Integer),
+    # Column("PFP_Url", Text),
+    # Column("Description", Text),
+    # Column("Bio_Link", Text),
+    # ])
 
-def check_users_table(engine: Engine, table_name: str) -> None:
-    """
-    Check the users table and specific members -> create if missing
-
-    :param engine: instance connection to the PostgreSQL database
-    :param table_name: the name of the table to check
-    """
-    metadata = MetaData(bind=engine)
-
-    if not engine.has_table(table_name):
-        logging.info(create_const)
-        Table(table_name, metadata,
-              Column('index', Text),
-              Column('Name', Text),
-              Column('Favorites', Integer),
-              Column("Retweets", Integer),
-              Column("Replies", Integer),
-              Column("Impressions", Integer),
-              )
-        metadata.create_all()
-        logging.info(f"{table_name} created")
-    else:
-        logging.info(f"{table_name} Table already exists")
-
-
-def check_pfp_table(engine: Engine, table_name: str) -> None:
-    """
-    Check the pfp table and specific members -> create if missing
-
-    :param engine: instance connection to the PostgreSQL database
-    :param table_name: the name of the table to check
-    """
-    metadata = MetaData(bind=engine)
-
-    if not engine.has_table(table_name):
-        logging.info(create_const)
-        Table(table_name, metadata,
-              Column('index', Text),
-              Column('Name', Text),
-              Column("Favorites", Integer),
-              Column("Retweets", Integer),
-              Column("Replies", Integer),
-              Column("Impressions", Integer),
-            #   Column("Rank", Integer),
-            #   Column("Global_Reach", Integer),
-              Column("PFP_Url", Text),
-              Column("Description", Text),
-              Column("Bio_Link", Text),
-              )
-        metadata.create_all()
-        logging.info(f"{table_name} created")
-    else:
-        logging.info(f"{table_name} Table already exists")
-
-
-def check_new_pfp_table(engine: Engine, table_name: str) -> None:
-    """
-    Check the new pfp table and specific members -> create if missing
-
-    :param engine: instance connection to the PostgreSQL database
-    :param table_name: the name of the table to check
-    """
-    metadata = MetaData(bind=engine)
-
-    if not engine.has_table(table_name):
-        logging.info(create_const)
-        Table(table_name, metadata,
-              Column('index', Text),
-              Column('Name', Text),
-              Column("Favorites", Integer),
-              Column("Retweets", Integer),
-              Column("Replies", Integer),
-              Column("Impressions", Integer),
-            #   Column("Rank", Integer),
-            #   Column("Global_Reach", Integer),
-              Column("PFP_Url", Text),
-              Column("Description", Text),
-              Column("Bio_Link", Text),
-              )
-        metadata.create_all()
-        logging.info(f"{table_name} created")
-    else:
-        logging.info(f"{table_name} Table already exists")
-
-
-def check_engagement_table(engine: Engine, table_name: str) -> None:
-    """
-    Check the engagement table and specific members -> create if missing
-
-    :param engine: instance connection to the PostgreSQL database
-    :param table_name: the name of the table to check
-    """
-    metadata = MetaData(bind=engine)
-
-    if not engine.has_table(table_name):
-        logging.info(create_const)
-        Table(table_name, metadata,
-              Column('index', Text),
-              Column('Name', Text),
-              Column("Favorites", Integer),
-              Column("Retweets", Integer),
-              Column("Replies", Integer),
-              Column("Impressions", Integer),
-              Column("PFP_Url", Text),
-              Column("Description", Text),
-              Column("Bio_Link", Text),
-              )
-        metadata.create_all()
-        logging.info(f"{table_name} created")
-    else:
-        logging.info(f"{table_name} Table already exists")
 
 
 def write_to_db(engine: Engine, df: pd.DataFrame, table_name: str) -> None:

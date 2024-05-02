@@ -51,9 +51,11 @@ Depreceated
     - access nft-inspect api to get pfp status and holder rank + global reach (api depcreceated)
 
 TODO:
-    - add time based functionality that resets the db every 30 days
-    - do we want one app instance deploy with dynamic table and rule creation?
-    - or do we want to have multiple instances for each project connecting to our same database that can modify their own rules?
+    - Use different input APIs to aggregate different data than just twitter
+    - Implement AI tracking from webscraping to get more data
+    - Add time based functionality that resets the db every 30 days
+    - Do we want one app instance deploy with dynamic table and rule creation?
+    - Or do we want to have multiple instances for each project connecting to our same database that can modify their own rules?
 '''
 
 # Postgres constants
@@ -61,16 +63,18 @@ params = st.params
 
 # Set tables based on constants
 engine = pg.start_db(params.db_name)
+
 tweetsTable = params.metrics_table_name
 usersTable = params.aggregated_table_name
 pfpTable = params.pfp_table_name
 newpfpTable = params.new_pfp_table_name
 
 # check if tables exist and create if not
-pg.check_metrics_table(engine, tweetsTable)
-pg.check_users_table(engine, usersTable)
-pg.check_pfp_table(engine, pfpTable)
-pg.check_new_pfp_table(engine, newpfpTable)
+# pg.check_metrics_table(engine, tweetsTable)
+# pg.check_users_table(engine, usersTable)
+# pg.check_pfp_table(engine, pfpTable)
+# pg.check_new_pfp_table(engine, newpfpTable)
+pg.check_tables(engine, params)
 
 # Init flags and empty frames for those used throughout the app
 # author = ""

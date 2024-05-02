@@ -13,7 +13,6 @@ TODO:
     - Change model names from Tweet to PFP_Table and propagate changes
 '''
 
-
 class Tweet(models.Model):
     """
     Class to capture data from database to return in API -> fields of leaderboard
