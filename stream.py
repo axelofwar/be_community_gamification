@@ -14,6 +14,7 @@ from utils.config import Config
 from PIL import Image
 from io import BytesIO
 import random
+from typing import List
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -64,6 +65,9 @@ params = st.params
 # Set tables based on constants
 engine = pg.start_db(params.db_name)
 
+# Consolidated function for checking existing tables and create if not
+pg.check_tables(engine, params)
+
 tweetsTable = params.metrics_table_name
 usersTable = params.aggregated_table_name
 pfpTable = params.pfp_table_name
@@ -74,13 +78,8 @@ newpfpTable = params.new_pfp_table_name
 # pg.check_users_table(engine, usersTable)
 # pg.check_pfp_table(engine, pfpTable)
 # pg.check_new_pfp_table(engine, newpfpTable)
-pg.check_tables(engine, params)
 
-# Init flags and empty frames for those used throughout the app
-# author = ""
-# df = pd.DataFrame()
-# export_df = pd.DataFrame()
-# export_include_df = pd.DataFrame()
+
 
 def display_image(img1: Image, pfp_link: str):
     """
@@ -94,6 +93,16 @@ def display_image(img1: Image, pfp_link: str):
     img1_cv = cv2.resize(img1_cv, (500, 500))
     cv2.imshow(f"Image {pfp_link}", img1_cv)
     cv2.waitKey(1)
+
+def process_files(files: List[str], folder_path: str):
+    for file in files:
+        if file.endswith((".png", ".jpg")):
+            with open(os.path.join(folder_path, file), "rb") as f:
+                img2_data = f.read()
+                img = Image.open(BytesIO(img2_data))
+                img_resized = np.array(img.convert("L").resize((pfp.width, pfp.height)))
+                wearing_pfp = nft.check_pfp(pfp, img_resized, folder_path, file)
+                return wearing_pfp
 
 
 def get_stream():
@@ -148,7 +157,11 @@ def get_stream():
             # aggregate (x/y)*engagement to original author
             # aggregate (x/x)*engagement to quote/retweeter
 
-            pfp_link_list, matched_users, matched_ids, non_holders = [], [], [], []
+            pfp_link_list: List[str] = []
+            matched_users: List[str] = []
+            matched_ids: List[str] = []
+            non_holders: List[str]= []
+
             members = pd.DataFrame()
             logging.info(f"\nTweet_ID: {_id}")
             tweet_data = st.get_data_by_id(str(_id))
@@ -184,26 +197,35 @@ def get_stream():
                     degod_filenames, min(5, len(degod_filenames)))
 
                 gpt4_response = "No match for this user"
-                for y00t_file in random_y00ts:
-                    for degod_file in random_degods:
-                        if y00t_file.endswith(".png") or y00t_file.endswith(".jpg"):
-                            with open(os.path.join(y00t_folder_path, y00t_file), "rb") as f:
-                                img2_data = f.read()
-                                y00t = np.array(Image.open(BytesIO(img2_data)).convert(
-                                    "L").resize((pfp.width, pfp.height)))
 
-                                wearing_y00t_pfp = nft.check_pfp(
-                                    pfp, y00t, y00t_folder_path, y00t_file)
+                # Filter out non-image files
+                y00t_files = [file for file in random_y00ts if file.endswith((".png", ".jpg"))]
+                degod_files = [file for file in random_degods if file.endswith((".png", ".jpg"))]
 
-                        if degod_file.endswith(".png") or degod_file.endswith(".jpg"):
-                            with open(os.path.join(degod_folder_path, degod_file), "rb") as f:
-                                img2_data = f.read()
-                                degod = np.array(Image.open(BytesIO(img2_data)).convert(
-                                    "L").resize((pfp.width, pfp.height)))
+                wearing_y00t_pfp = process_files(y00t_files, y00t_folder_path)
+                wearing_degod_pfp = process_files(degod_files, degod_folder_path)
+                ############################################################################################################
 
-                                wearing_degod_pfp = nft.check_pfp(
-                                    pfp, degod, degod_folder_path, degod_file)
+                # for y00t_file in random_y00ts:
+                #     for degod_file in random_degods:
+                #         if y00t_file.endswith(".png") or y00t_file.endswith(".jpg"):
+                #             with open(os.path.join(y00t_folder_path, y00t_file), "rb") as f:
+                #                 img2_data = f.read()
+                #                 y00t = np.array(Image.open(BytesIO(img2_data)).convert(
+                #                     "L").resize((pfp.width, pfp.height)))
 
+                #                 wearing_y00t_pfp = nft.check_pfp(
+                #                     pfp, y00t, y00t_folder_path, y00t_file)
+
+                #         if degod_file.endswith(".png") or degod_file.endswith(".jpg"):
+                #             with open(os.path.join(degod_folder_path, degod_file), "rb") as f:
+                #                 img2_data = f.read()
+                #                 degod = np.array(Image.open(BytesIO(img2_data)).convert(
+                #                     "L").resize((pfp.width, pfp.height)))
+
+                #                 wearing_degod_pfp = nft.check_pfp(
+                #                     pfp, degod, degod_folder_path, degod_file)
+                ############################################################################################################
                     # If running in debug mode - test the chat GPT response script 
                     if logging.basicConfig(level=logging.DEBUG):
                         system_intel = "You are GPT-4, answer my question as as a twitter meme and comedy expert. Your goal is to use crypto twitter relevant jokes and memes \
