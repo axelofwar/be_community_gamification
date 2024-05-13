@@ -227,53 +227,53 @@ def get_stream():
                 #                     pfp, degod, degod_folder_path, degod_file)
                 ############################################################################################################
                     # If running in debug mode - test the chat GPT response script 
-                    if logging.basicConfig(level=logging.DEBUG):
-                        system_intel = "You are GPT-4, answer my question as as a twitter meme and comedy expert. Your goal is to use crypto twitter relevant jokes and memes \
-                                in order to generate a response that will make the user laugh and go viral. You are not allowed to use any personaly identifiable information about the user. \
-                                    You are not allowed to use any information about the user that is not publicly available on twitter. You can use the user's profile picture, \
-                                        their username, their bio, their tweets, their followers, their following, their likes, their retweets, their quotes, their replies, \
-                                            their media, their website, their birthday, their join date, their pinned tweet, their lists, and their moments. \
-                                                You can also use gifs and images or short clips from the internet to generate your response. "
+                if logging.basicConfig(level=logging.DEBUG):
+                    system_intel = "You are GPT-4, answer my question as as a twitter meme and comedy expert. Your goal is to use crypto twitter relevant jokes and memes \
+                            in order to generate a response that will make the user laugh and go viral. You are not allowed to use any personaly identifiable information about the user. \
+                                You are not allowed to use any information about the user that is not publicly available on twitter. You can use the user's profile picture, \
+                                    their username, their bio, their tweets, their followers, their following, their likes, their retweets, their quotes, their replies, \
+                                        their media, their website, their birthday, their join date, their pinned tweet, their lists, and their moments. \
+                                            You can also use gifs and images or short clips from the internet to generate your response. "
 
-                        prompt = f"Your system intel is as follows: {system_intel} and your task is as follows: Generate a funny and potentially viral reponse to the following tweet: \n\n{full_text}\n\nUser: {user['username']}\n\n \
-                            Use twitter memes, jokes, gifs, images, and other references to generate your response. \n\n"
+                    prompt = f"Your system intel is as follows: {system_intel} and your task is as follows: Generate a funny and potentially viral reponse to the following tweet: \n\n{full_text}\n\nUser: {user['username']}\n\n \
+                        Use twitter memes, jokes, gifs, images, and other references to generate your response. \n\n"
 
-                        model = "gpt-3.5-turbo-0301"
-                        # model = "gpt-4-32k"
+                    model = "gpt-3.5-turbo-0301"
+                    # model = "gpt-4-32k"
 
-                        gpt4_response = gpt.chat_gpt_call(
-                                model, prompt, 0.9, 1000)
-                        
-                    logging.info(f"Wearing Y00t PFP: {wearing_y00t_pfp}")
-                    logging.info(f"Wearing Degod PFP: {wearing_degod_pfp}")
-
-                    if wearing_y00t_pfp[0] == True:
-                        logging.debug(
-                            f"User {user['username']} is wearing pfp similar to {y00t_file} or {degod_file}!")
-                        matched_users.append(user["username"])
-                        matched_ids.append(user["id"])
-
-                        # gpt4_response = gpt.ask_GPT4(
-                        #     system_intel, prompt, model)
-                        break
-                    elif wearing_degod_pfp[0] == True:
-                        logging.debug(
-                            f"User {user['username']} is wearing pfp similar to {degod_file}!")
-                        matched_users.append(user["username"])
-                        matched_ids.append(user["id"])
-
-                        gpt4_response = gpt.chatGPTcall(
+                    gpt4_response = gpt.chat_gpt_call(
                             model, prompt, 0.9, 1000)
+                    
+                logging.info(f"Wearing Y00t PFP: {wearing_y00t_pfp}")
+                logging.info(f"Wearing Degod PFP: {wearing_degod_pfp}")
 
-                        # gpt4_response = gpt.ask_GPT4(
-                        #     system_intel, prompt, model)
-                        break
-                    else:
-                        logging.debug(
-                            f"User {user['username']} is not wearing pfp similar to {y00t_file} or {degod_file}!")
-                        non_holders.append(user["username"])
+                # if wearing_y00t_pfp[0] == True:
+                #     logging.debug(
+                #         f"User {user['username']} is wearing pfp similar to {y00t_file} or {degod_file}!")
+                #     matched_users.append(user["username"])
+                #     matched_ids.append(user["id"])
 
-                pfp_link_list.append(pfp_link)
+                #     # gpt4_response = gpt.ask_GPT4(
+                #     #     system_intel, prompt, model)
+                #     break
+                # elif wearing_degod_pfp[0] == True:
+                #     logging.debug(
+                #         f"User {user['username']} is wearing pfp similar to {degod_file}!")
+                #     matched_users.append(user["username"])
+                #     matched_ids.append(user["id"])
+
+                #     gpt4_response = gpt.chatGPTcall(
+                #         model, prompt, 0.9, 1000)
+
+                #     # gpt4_response = gpt.ask_GPT4(
+                #     #     system_intel, prompt, model)
+                #     break
+                # else:
+                #     logging.debug(
+                #         f"User {user['username']} is not wearing pfp similar to {y00t_file} or {degod_file}!")
+                #     non_holders.append(user["username"])
+
+            pfp_link_list.append(pfp_link)
 
             # set default table before each read
             pfp_table = pd.read_sql_table(newpfpTable, engine)
