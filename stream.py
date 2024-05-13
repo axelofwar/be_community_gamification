@@ -94,7 +94,7 @@ def display_image(img1: Image, pfp_link: str):
     cv2.imshow(f"Image {pfp_link}", img1_cv)
     cv2.waitKey(1)
 
-def process_files(files: List[str], folder_path: str):
+def process_files(pfp: Image, files: List[str], folder_path: str):
     for file in files:
         if file.endswith((".png", ".jpg")):
             with open(os.path.join(folder_path, file), "rb") as f:
@@ -202,8 +202,8 @@ def get_stream():
                 y00t_files = [file for file in random_y00ts if file.endswith((".png", ".jpg"))]
                 degod_files = [file for file in random_degods if file.endswith((".png", ".jpg"))]
 
-                wearing_y00t_pfp = process_files(y00t_files, y00t_folder_path)
-                wearing_degod_pfp = process_files(degod_files, degod_folder_path)
+                wearing_y00t_pfp = process_files(pfp, y00t_files, y00t_folder_path)
+                wearing_degod_pfp = process_files(pfp, degod_files, degod_folder_path)
                 ############################################################################################################
 
                 # for y00t_file in random_y00ts:
@@ -227,6 +227,7 @@ def get_stream():
                 #                     pfp, degod, degod_folder_path, degod_file)
                 ############################################################################################################
                     # If running in debug mode - test the chat GPT response script 
+
                 if logging.basicConfig(level=logging.DEBUG):
                     system_intel = "You are GPT-4, answer my question as as a twitter meme and comedy expert. Your goal is to use crypto twitter relevant jokes and memes \
                             in order to generate a response that will make the user laugh and go viral. You are not allowed to use any personaly identifiable information about the user. \

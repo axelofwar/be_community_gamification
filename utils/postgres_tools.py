@@ -111,6 +111,129 @@ def start_db(db_name: str) -> Engine:
     return engine
 
 
+def check_table(engine: Engine, table_name: str, columns: List[Column]) -> None:
+    """
+    Check the table and specific members in the database -> create if missing
+
+    :param engine: instance connection to the PostgreSQL database
+    :param table_name: the name of the table to check
+    :param columns: list of Column objects representing the structure of the table
+    """
+    metadata = MetaData(bind=engine)
+
+    if not engine.has_table(table_name):
+        logging.info(create_const)
+        Table(table_name, metadata, *columns)
+        metadata.create_all()
+        logging.info(f"{table_name} created")
+    else:
+        logging.info(f"{table_name} Table already exists")
+
+def check_tables(engine: Engine, params: Config) -> None:
+    check_table(engine, params.metrics_table_name, [
+    Column('index', Text),
+    Column('Author', Text),
+    Column('Favorites', Integer),
+    Column('Retweets', Integer),
+    Column('Replies', Integer),
+    Column('Impressions', Integer),
+    Column('Tweet_ID', Text),
+    Column('Tags', Text),
+    ])
+    check_table(engine, params.aggregated_table_name, [
+    Column('index', Text),
+    Column('Name', Text),
+    Column('Favorites', Integer),
+    Column("Retweets", Integer),
+    Column("Replies", Integer),
+    Column("Impressions", Integer),
+    ])
+    check_table(engine, params.pfp_table_name, [
+    Column('index', Text),
+    Column('Name', Text),
+    Column("Favorites", Integer),
+    Column("Retweets", Integer),
+    Column("Replies", Integer),
+    Column("Impressions", Integer),
+    # Column("Rank", Integer),
+    # Column("Global_Reach", Integer),
+    Column("PFP_Url", Text),
+    Column("Description", Text),
+    Column("Bio_Link", Text),
+    ])
+    check_table(engine, params.new_pfp_table_name, [
+    Column('index', Text),
+    Column('Name', Text),
+    Column("Favorites", Integer),
+    Column("Retweets", Integer),
+    Column("Replies", Integer),
+    Column("Impressions", Integer),
+    # Column("Rank", Integer),
+    # Column("Global_Reach", Integer),
+    Column("PFP_Url", Text),
+    Column("Description", Text),
+    Column("Bio_Link", Text),
+    ])
+    # check_table(engine, 'engagement_table', [
+    # Column('index', Text),
+    # Column('Name', Text),
+    # Column("Favorites", Integer),
+    # Column("Retweets", Integer),
+    # Column("Replies", Integer),
+    # Column("Impressions", Integer),
+    # Column("PFP_Url", Text),
+    # Column("Description", Text),
+    # Column("Bio_Link", Text),
+    # ])
+
+
+
+def write_to_db(engine: Engine, df: pd.DataFrame, table_name: str) -> None:
+    """
+    Write dataframe to the database table, append if table already exists
+
+    :param engine: instance connection to the PostgreSQL database
+    :param df: the dataframe with data to add
+    :param table_name: the name of the table to check
+    """
+    df.to_sql(table_name, engine, if_exists='append', index=True)
+
+
+def get_admin_user(database_name: str):
+    """
+    Get the current admin user of the database
+
+    :param database_name: (Self-explanatory)
+    """
+    conn = psycopg2.connect(
+        host="localhost",
+        database=database_name,
+        user="postgres",
+        password=POSTGRES_PASSWORD
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM pg_user")
+    rows = cursor.fetchall()
+    for row in rows:
+        logging.debug(f"Row: {row}")
+
+
+def get_all_user_metric_rows(engine: Engine, table_name: str, username: str):
+    """
+    Return all of the data in the metrics table for a user
+
+    :param engine: instance connection to the PostgreSQL database
+    :param table_name: the name of the table to check
+    :param username: the user to get the data of
+
+    """
+    metadata = MetaData(bind=engine)
+    table = Table(table_name, metadata, autoload=True)
+    query = select([table]).where(table.columns.index == username)
+    result = engine.execute(query)
+    rows = result.fetchall()
+    return rows
+
 # def check_metrics_table(engine: Engine, table_name: str) -> None:
 #     """
 #     Check the metrics table and specific members in the database -> create if missing
@@ -249,126 +372,3 @@ def start_db(db_name: str) -> Engine:
 #         logging.info(f"{table_name} created")
 #     else:
 #         logging.info(f"{table_name} Table already exists")
-
-def check_table(engine: Engine, table_name: str, columns: List[Column]) -> None:
-    """
-    Check the table and specific members in the database -> create if missing
-
-    :param engine: instance connection to the PostgreSQL database
-    :param table_name: the name of the table to check
-    :param columns: list of Column objects representing the structure of the table
-    """
-    metadata = MetaData(bind=engine)
-
-    if not engine.has_table(table_name):
-        logging.info(create_const)
-        Table(table_name, metadata, *columns)
-        metadata.create_all()
-        logging.info(f"{table_name} created")
-    else:
-        logging.info(f"{table_name} Table already exists")
-
-def check_tables(engine: Engine, params: Config) -> None:
-    check_table(engine, params.metrics_table_name, [
-    Column('index', Text),
-    Column('Author', Text),
-    Column('Favorites', Integer),
-    Column('Retweets', Integer),
-    Column('Replies', Integer),
-    Column('Impressions', Integer),
-    Column('Tweet_ID', Text),
-    Column('Tags', Text),
-    ])
-    check_table(engine, params.aggregated_table_name, [
-    Column('index', Text),
-    Column('Name', Text),
-    Column('Favorites', Integer),
-    Column("Retweets", Integer),
-    Column("Replies", Integer),
-    Column("Impressions", Integer),
-    ])
-    check_table(engine, params.pfp_table_name, [
-    Column('index', Text),
-    Column('Name', Text),
-    Column("Favorites", Integer),
-    Column("Retweets", Integer),
-    Column("Replies", Integer),
-    Column("Impressions", Integer),
-    # Column("Rank", Integer),
-    # Column("Global_Reach", Integer),
-    Column("PFP_Url", Text),
-    Column("Description", Text),
-    Column("Bio_Link", Text),
-    ])
-    check_table(engine, params.new_pfp_table_name, [
-    Column('index', Text),
-    Column('Name', Text),
-    Column("Favorites", Integer),
-    Column("Retweets", Integer),
-    Column("Replies", Integer),
-    Column("Impressions", Integer),
-    # Column("Rank", Integer),
-    # Column("Global_Reach", Integer),
-    Column("PFP_Url", Text),
-    Column("Description", Text),
-    Column("Bio_Link", Text),
-    ])
-    # check_table(engine, 'engagement_table', [
-    # Column('index', Text),
-    # Column('Name', Text),
-    # Column("Favorites", Integer),
-    # Column("Retweets", Integer),
-    # Column("Replies", Integer),
-    # Column("Impressions", Integer),
-    # Column("PFP_Url", Text),
-    # Column("Description", Text),
-    # Column("Bio_Link", Text),
-    # ])
-
-
-
-def write_to_db(engine: Engine, df: pd.DataFrame, table_name: str) -> None:
-    """
-    Write dataframe to the database table, append if table already exists
-
-    :param engine: instance connection to the PostgreSQL database
-    :param df: the dataframe with data to add
-    :param table_name: the name of the table to check
-    """
-    df.to_sql(table_name, engine, if_exists='append', index=True)
-
-
-def get_admin_user(database_name: str):
-    """
-    Get the current admin user of the database
-
-    :param database_name: (Self-explanatory)
-    """
-    conn = psycopg2.connect(
-        host="localhost",
-        database=database_name,
-        user="postgres",
-        password=POSTGRES_PASSWORD
-    )
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM pg_user")
-    rows = cursor.fetchall()
-    for row in rows:
-        logging.debug(f"Row: {row}")
-
-
-def get_all_user_metric_rows(engine: Engine, table_name: str, username: str):
-    """
-    Return all of the data in the metrics table for a user
-
-    :param engine: instance connection to the PostgreSQL database
-    :param table_name: the name of the table to check
-    :param username: the user to get the data of
-
-    """
-    metadata = MetaData(bind=engine)
-    table = Table(table_name, metadata, autoload=True)
-    query = select([table]).where(table.columns.index == username)
-    result = engine.execute(query)
-    rows = result.fetchall()
-    return rows
